@@ -38,7 +38,7 @@ export default function MobileMenu() {
    const menuItems = [
       { href: "/", icon: <Home className="w-5 h-5" />, label: "Home" },
       { href: "/about", icon: <User className="w-5 h-5" />, label: "About" },
-      { href: "/service", icon: <Briefcase className="w-5 h-5" />, label: "Services" },
+      { href: "/services", icon: <Briefcase className="w-5 h-5" />, label: "Services" },
       { href: "/contact", icon: <Mail className="w-5 h-5" />, label: "Contact" },
       { href: "/resume", icon: <FileText className="w-5 h-5" />, label: "Resume" },
       { href: "/user/dashboard", icon: <LayoutDashboard className="w-5 h-5" />, label: "Dashboard" },

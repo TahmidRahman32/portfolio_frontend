@@ -5,7 +5,7 @@ import React from 'react';
 const AdminDashboard = async () => {
 
    const myResume = await getMyResume();
-   console.log("get my resume", myResume)
+   // console.log("get my resume", myResume)
    return (
       <div>
          <Dashboard  myResumes={myResume} />

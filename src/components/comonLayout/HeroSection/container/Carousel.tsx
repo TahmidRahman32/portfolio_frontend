@@ -609,9 +609,9 @@ const ModernChainCarousel: React.FC<ChainCarouselProps> = ({ items, scrollSpeedM
             style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
          />
 
-         <div className="relative z-10 py-16 px-4 md:px-8">
+         <div className="relative z-10 py-3 md:py-16 px-4 md:px-8">
             {/* Header */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, ease }} className="text-center mb-12">
+            <motion.div initial={{ opacity: 1, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, ease }} className="text-center mb-12">
                <span className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-[11px] font-mono uppercase tracking-[0.2em] text-white/40">Ecosystem Explorer</span>
                <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif" }} className="text-4xl md:text-5xl font-normal text-white tracking-tight mb-3">
                   Explore Ecosystems

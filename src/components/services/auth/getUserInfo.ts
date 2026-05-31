@@ -67,6 +67,7 @@ const getUserInfoUncached = async (): Promise<UserInfo | any> => {
    let userInfo: UserInfo | any;
    try {
       const response = await serverFetch.get("/auth/me", {
+         credentials: "include",
          cache: "force-cache",
          next: { tags: ["user-info"] },
       });
