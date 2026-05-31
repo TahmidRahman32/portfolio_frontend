@@ -470,7 +470,7 @@ export default function LoginPage() {
             });
             // Redirect to dashboard
             setTimeout(() => {
-               router.push("/dashboard");
+               router.push("/user/dashboard");
             }, 1500);
          } else {
             console.error("❌ Login failed:", state.message);
@@ -489,7 +489,7 @@ export default function LoginPage() {
          console.log("🔵 Starting Google OAuth flow...");
          
          // This will redirect to backend OAuth endpoint
-         initiateOAuthLogin("google", "/dashboard");
+         initiateOAuthLogin("google", "/user/dashboard");
          
          // If we get here, something went wrong
          setOauthLoading(null);
@@ -514,7 +514,7 @@ export default function LoginPage() {
          console.log("⚫ Starting GitHub OAuth flow...");
          
          // This will redirect to backend OAuth endpoint
-         initiateOAuthLogin("github", "/dashboard");
+         initiateOAuthLogin("github", "/user/dashboard");
          
          // If we get here, something went wrong
          setOauthLoading(null);
