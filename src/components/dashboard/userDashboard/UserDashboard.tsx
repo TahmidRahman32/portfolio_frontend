@@ -747,14 +747,387 @@
 // JSX FIXED to match actual data structure
 // No function changes - only JSX updates
 
+// "use client";
+
+// import { useState, useEffect, useRef } from "react";
+// import Link from "next/link";
+// import { motion, useInView } from "framer-motion";
+// import { FileText, Eye, Download, Layers, BarChart2, Settings, Home, Bell, Plus, ChevronRight, Pencil, RefreshCw } from "lucide-react";
+// import { ArrowLeft } from "lucide-react";
+// import ResumeModal from "./Resumemodal";
+// import { useResumeApi } from "@/components/comonLayout/resume/useResume";
+
+// const ease = [0.22, 1, 0.36, 1] as const;
+
+// // ── Format date ────────────────────────────────────────────────────────────────
+// function formatDate(dateString: string): string {
+//    try {
+//       const date = new Date(dateString);
+//       const now = new Date();
+//       const diffMs = now.getTime() - date.getTime();
+//       const diffHours = Math.floor(diffMs / 3600000);
+//       const diffDays = Math.floor(diffMs / 86400000);
+
+//       if (diffHours < 24) return `${diffHours}h ago`;
+//       if (diffDays < 7) return `${diffDays}d ago`;
+
+//       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+//    } catch {
+//       return "recently";
+//    }
+// }
+
+// // ── Transform resume data ──────────────────────────────────────────────────────
+// function transformResume(resume: any) {
+//    return {
+//       id: resume.id,
+//       name: resume.personalInfo?.fullName || "Untitled Resume",
+//       template: "Professional",
+//       edited: formatDate(resume.updatedAt),
+//       pub: true,
+//       ...resume, // Include full resume data for modal
+//    };
+// }
+
+// const stats = [
+//    { label: "Resumes", value: "3", sub: "+2 this month", icon: FileText },
+//    { label: "Profile Views", value: "147", sub: "+12% this week", icon: Eye },
+//    { label: "Downloads", value: "8", sub: "+3 today", icon: Download },
+//    { label: "Templates", value: "2", sub: "Modern · Pro", icon: Layers },
+// ];
+
+// const navItems = [
+//    { id: "overview", label: "Overview", icon: BarChart2 },
+//    { id: "resumes", label: "My Resumes", icon: FileText },
+//    { id: "templates", label: "Templates", icon: Layers },
+//    { id: "settings", label: "Settings", icon: Settings },
+// ];
+
+// const quickActions = [
+//    { label: "New Resume", icon: Plus, href: "/resume", color: "text-white/50" },
+//    { label: "Templates", icon: Layers, href: "/resume-builder/templates", color: "text-white/50" },
+//    { label: "Analytics", icon: BarChart2, href: "/dashboard/analytics", color: "text-white/50" },
+//    { label: "Settings", icon: Settings, href: "/dashboard/settings", color: "text-white/50" },
+// ];
+
+// const recTemplates = [
+//    { name: "Modern", used: true, emoji: "◈" },
+//    { name: "Professional", used: true, emoji: "◻" },
+//    { name: "Executive", used: false, emoji: "▣" },
+//    { name: "Creative", used: false, emoji: "◆" },
+// ];
+
+// // ── Skeleton ───────────────────────────────────────────────────────────────────
+// function Skeleton() {
+//    return (
+//       <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+//          <div className="text-center space-y-3">
+//             <div className="w-10 h-10 border border-white/10 border-t-white/30 rounded-full animate-spin mx-auto" />
+//             <p className="text-xs font-mono text-white/20">Loading dashboard…</p>
+//          </div>
+//       </div>
+//    );
+// }
+
+// // ── Main ───────────────────────────────────────────────────────────────────────
+// export default function Dashboard({ myResumes }: { myResumes: any }) {
+//    console.log("My resumes:", myResumes);
+//    const [activeTab, setActiveTab] = useState("overview");
+//    const [loading, setLoading] = useState(true);
+//    const [showResumeModal, setShowResumeModal] = useState(false);
+//    const [selectedResume, setSelectedResume] = useState<any>(null);
+
+//    const mainRef = useRef<HTMLDivElement>(null);
+//    const inView = useInView(mainRef, { once: true, margin: "-40px" });
+
+//    // Transform resume data from API
+//    const resumes = myResumes?.data?.map(transformResume) || [];
+//    const resumeCount = resumes.length;
+//    const storagePercent = Math.round((resumeCount / 10) * 100);
+//    const { apiStatus, isSaving, lastSaved, hasSaved, saveResume, loadResume, deleteResume } = useResumeApi();
+
+//    // Handle modal open
+//    const handleOpenModal = (resume: any) => {
+//       setSelectedResume(resume);
+//       setShowResumeModal(true);
+//    };
+
+//    // Handle modal close
+//    const handleCloseModal = () => {
+//       setShowResumeModal(false);
+//       setSelectedResume(null);
+//    };
+
+//    useEffect(() => {
+//       const t = setTimeout(() => setLoading(false), 900);
+//       return () => clearTimeout(t);
+//    }, []);
+//    useEffect(() => {
+//       (async () => {
+//         await loadResume();
+
+//       })();
+//    }, []); // eslint-disable-line
+
+//    if (loading) return <Skeleton />;
+
+//    return (
+//       <div className="min-h-screen bg-[#080808]">
+//          {/* Noise */}
+//          <div
+//             aria-hidden
+//             className="pointer-events-none fixed inset-0 opacity-[0.025] z-0"
+//             style={{
+//                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+//             }}
+//          />
+//          {/* Grid */}
+//          <div
+//             aria-hidden
+//             className="pointer-events-none fixed inset-0 z-0 opacity-[0.03]"
+//             style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
+//          />
+
+//          {/* ── Resume Modal (Rendered at top level) ── */}
+//          <ResumeModal resume={selectedResume} isOpen={showResumeModal} onClose={handleCloseModal} />
+
+//          {/* ── Top nav ── */}
+//          <header className="relative z-20 border-b border-white/[0.06] backdrop-blur-sm">
+//             <div className="max-w-7xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
+//                <div className="flex items-center gap-3">
+//                   <div className="w-7 h-7 rounded-lg border border-white/10 bg-white/[0.04] flex items-center justify-center">
+//                      <FileText size={13} className="text-white/40" />
+//                   </div>
+//                   <span className="text-sm font-semibold text-white/50 hidden sm:block">Dashboard</span>
+//                </div>
+
+//                <div className="flex items-center gap-3">
+//                   <button className="relative w-8 h-8 rounded-lg border border-white/[0.07] bg-white/[0.02] flex items-center justify-center text-white/30 hover:text-white/60 hover:border-white/15 transition-all duration-200">
+//                      <Bell size={14} />
+//                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-400/70" />
+//                   </button>
+
+//                   <Link
+//                      href="/"
+//                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.07] bg-white/[0.02] text-white/30 text-[11px] font-mono uppercase tracking-widest hover:border-white/15 hover:text-white/50 transition-all duration-200"
+//                   >
+//                      <Home size={11} /> Home
+//                   </Link>
+
+//                   {/* Avatar */}
+//                   <div className="flex items-center gap-2.5 pl-2 border-l border-white/[0.06]">
+//                      <div className="hidden sm:block">
+//                         <p className="text-[10px] font-mono text-white/25">Pro Plan</p>
+//                      </div>
+//                   </div>
+//                </div>
+//             </div>
+//          </header>
+
+//          <div className="relative z-10 max-w-7xl mx-auto px-5 py-8">
+//             <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+//                {/* ── Sidebar ── */}
+//                <motion.aside initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.65, ease }} className="lg:col-span-1">
+//                   <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm p-5 sticky top-6">
+//                      {/* User card */}
+//                      <div className="text-center mb-6 pb-6 border-b border-white/[0.05]">
+//                         <span className="inline-block mt-2 px-2.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/[0.06] text-[10px] font-mono text-emerald-400/60 uppercase tracking-wider">Pro Plan</span>
+//                      </div>
+
+//                      {/* Nav */}
+//                      <nav className="space-y-1 mb-6">
+//                         {navItems.map((item) => {
+//                            const Icon = item.icon;
+//                            const active = activeTab === item.id;
+//                            return (
+//                               <button
+//                                  key={item.id}
+//                                  onClick={() => setActiveTab(item.id)}
+//                                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 border ${
+//                                     active ? "bg-white/[0.07] border-white/[0.14] text-white/80" : "border-transparent text-white/30 hover:bg-white/[0.04] hover:text-white/55"
+//                                  }`}
+//                               >
+//                                  <Icon size={14} className="flex-none" />
+//                                  <span className="text-xs font-mono tracking-wide">{item.label}</span>
+//                               </button>
+//                            );
+//                         })}
+//                      </nav>
+
+//                      {/* Storage */}
+//                      <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
+//                         <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/25 mb-3">Storage</p>
+//                         <div className="flex justify-between text-[11px] font-mono text-white/30 mb-2">
+//                            <span>{resumeCount} of 10 resumes</span>
+//                            <span>{storagePercent}%</span>
+//                         </div>
+//                         <div className="w-full h-px bg-white/[0.07] rounded-full overflow-hidden">
+//                            <motion.div className="h-full bg-white/30 rounded-full" initial={{ width: 0 }} animate={{ width: `${storagePercent}%` }} transition={{ duration: 1, ease, delay: 0.5 }} />
+//                         </div>
+//                      </div>
+//                   </div>
+//                </motion.aside>
+
+//                {/* ── Main ── */}
+//                <div ref={mainRef} className="lg:col-span-3 space-y-5">
+//                   {/* Welcome banner */}
+//                   <motion.div
+//                      initial={{ opacity: 0, y: 20 }}
+//                      animate={{ opacity: 1, y: 0 }}
+//                      transition={{ duration: 0.65, ease, delay: 0.1 }}
+//                      className="relative rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm p-7 overflow-hidden"
+//                   >
+//                      <div aria-hidden className="absolute inset-0 rounded-2xl pointer-events-none" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(255,255,255,0.03) 0%, transparent 70%)" }} />
+//                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+//                         <div>
+//                            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/25 mb-2">Welcome back</p>
+//                            <p className="text-sm font-mono text-white/30 mt-2">Ready to build your next resume?</p>
+//                         </div>
+//                         <div className="flex flex-col sm:flex-row gap-2.5 flex-none">
+//                            <Link href="/resume" className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors duration-200">
+//                               <Plus size={14} /> New Resume
+//                            </Link>
+//                            <Link
+//                               href="/"
+//                               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-white/45 text-sm font-medium hover:border-white/20 hover:text-white/65 transition-all duration-200"
+//                            >
+//                               <ArrowLeft size={13} /> Back
+//                            </Link>
+//                         </div>
+//                      </div>
+//                   </motion.div>
+
+//                   {/* Recent Resumes */}
+//                   <motion.div initial={{ opacity: 1, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.65, ease, delay: 0.38 }} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm p-6">
+//                      <div className="flex items-center justify-between mb-5">
+//                         <p className="text-xs font-mono uppercase tracking-[0.18em] text-white/30">Recent Resumes {resumeCount > 0 && <span className="text-white/20">({resumeCount})</span>}</p>
+//                         <button
+//                            onClick={() => loadResume()}
+//                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] text-white/35 text-xs font-mono uppercase tracking-widest hover:border-white/20 hover:text-white/55 transition-all duration-200"
+//                         >
+//                            <RefreshCw size={12} /> Load Resumes
+//                         </button>
+//                      </div>
+
+//                      {resumes.length === 0 ? (
+//                         <div className="text-center py-8">
+//                            <FileText size={24} className="mx-auto text-white/20 mb-2" />
+//                            <p className="text-sm text-white/30">No resumes yet</p>
+//                            <p className="text-xs text-white/15 mt-1">Create your first resume to get started</p>
+//                         </div>
+//                      ) : (
+//                         <div className="space-y-2">
+//                            {resumes.slice(0, 5).map((r: any, i: number) => (
+//                               <motion.div
+//                                  key={r.id}
+//                                  initial={{ opacity: 1, x: -16 }}
+//                                  animate={inView ? { opacity: 1, x: 0 } : {}}
+//                                  transition={{ duration: 0.5, ease, delay: 0.45 + i * 0.08 }}
+//                                  className="group flex items-center gap-4 p-4 rounded-xl border border-white/[0.06] bg-white/[0.01] hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-200"
+//                               >
+//                                  {/* Doc icon */}
+//                                  <div className="flex-none w-10 h-12 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center justify-center">
+//                                     <FileText size={14} className="text-white/20" />
+//                                  </div>
+//                                  <div className="flex-1 min-w-0">
+//                                     <p className="text-sm font-semibold text-white/65 group-hover:text-white/80 transition-colors truncate">{r.name}</p>
+//                                     <p className="text-[11px] font-mono text-white/25 mt-0.5">
+//                                        {r.template} · {r.edited}
+//                                        {r.pub && <span className="ml-2 text-white/20">· Public</span>}
+//                                     </p>
+//                                  </div>
+//                                  <div className="flex items-center gap-1.5 flex-none">
+//                                     {/* View Button */}
+//                                     <button
+//                                        onClick={() => handleOpenModal(r)}
+//                                        className="w-8 h-8 rounded-lg border border-white/[0.06] bg-white/[0.02] flex items-center justify-center text-white/20 hover:text-white/50 hover:border-white/15 transition-all duration-150 cursor-pointer"
+//                                        title="View Resume"
+//                                     >
+//                                        <Eye size={13} />
+//                                     </button>
+
+//                                     {/* Download Button */}
+//                                     <button
+//                                        className="w-8 h-8 rounded-lg border border-white/[0.06] bg-white/[0.02] flex items-center justify-center text-white/20 hover:text-white/50 hover:border-white/15 transition-all duration-150 cursor-pointer"
+//                                        title="Download Resume"
+//                                     >
+//                                        <Download size={13} />
+//                                     </button>
+
+//                                     {/* Edit Button */}
+//                                     <Link
+//                                        href={`/resume-builder?edit=${r.id}`}
+//                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/35 text-[11px] font-mono uppercase tracking-widest hover:border-white/20 hover:text-white/60 transition-all duration-150"
+//                                     >
+//                                        <Pencil size={10} /> Edit
+//                                     </Link>
+//                                  </div>
+//                               </motion.div>
+//                            ))}
+//                         </div>
+//                      )}
+//                   </motion.div>
+
+//                   {/* Bottom row */}
+//                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+//                      {/* Quick actions */}
+//                      <motion.div initial={{ opacity: 1, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, ease, delay: 0.55 }} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm p-5">
+//                         <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/25 mb-4">Quick Actions</p>
+//                         <div className="grid grid-cols-2 gap-2.5">
+//                            {quickActions.map((a) => {
+//                               const Icon = a.icon;
+//                               return (
+//                                  <Link
+//                                     key={a.label}
+//                                     href={a.href}
+//                                     className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-white/[0.06] bg-white/[0.01] hover:border-white/[0.13] hover:bg-white/[0.04] transition-all duration-200"
+//                                  >
+//                                     <Icon size={16} className="text-white/25 group-hover:text-white/55 transition-colors" />
+//                                     <span className="text-[11px] font-mono text-white/30 group-hover:text-white/55 transition-colors">{a.label}</span>
+//                                  </Link>
+//                               );
+//                            })}
+//                         </div>
+//                      </motion.div>
+
+//                      {/* Recommended templates */}
+//                      <motion.div initial={{ opacity: 1, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, ease, delay: 0.62 }} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm p-5">
+//                         <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/25 mb-4">Recommended Templates</p>
+//                         <div className="space-y-2">
+//                            {recTemplates.map((t) => (
+//                               <div key={t.name} className="group flex items-center gap-3 p-3 rounded-xl border border-white/[0.05] hover:border-white/[0.12] hover:bg-white/[0.03] transition-all duration-200">
+//                                  <div className="w-8 h-8 rounded-lg border border-white/[0.07] bg-white/[0.03] flex items-center justify-center text-base text-white/30">{t.emoji}</div>
+//                                  <div className="flex-1 min-w-0">
+//                                     <p className="text-xs font-semibold text-white/55 group-hover:text-white/70 transition-colors">{t.name}</p>
+//                                     <p className="text-[10px] font-mono text-white/20">{t.used ? "Used in your resumes" : "Try this template"}</p>
+//                                  </div>
+//                                  <Link
+//                                     href={`/resume-builder?template=${t.name.toLowerCase()}`}
+//                                     className="px-3 py-1.5 rounded-lg border border-white/[0.07] bg-white/[0.02] text-[10px] font-mono text-white/25 hover:border-white/20 hover:text-white/50 transition-all duration-150"
+//                                  >
+//                                     {t.used ? "Reuse" : "Try"}
+//                                  </Link>
+//                               </div>
+//                            ))}
+//                         </div>
+//                      </motion.div>
+//                   </div>
+//                </div>
+//             </div>
+//          </div>
+//       </div>
+//    );
+// }
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
-import { FileText, Eye, Download, Layers, BarChart2, Settings, Home, Bell, Plus, ChevronRight, Pencil } from "lucide-react";
+import { FileText, Eye, Download, Layers, BarChart2, Settings, Home, Bell, Plus, ChevronRight, Pencil, RefreshCw } from "lucide-react";
 import { ArrowLeft } from "lucide-react";
 import ResumeModal from "./Resumemodal";
+import { useResumeApi } from "@/components/comonLayout/resume/useResume";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -784,7 +1157,7 @@ function transformResume(resume: any) {
       template: "Professional",
       edited: formatDate(resume.updatedAt),
       pub: true,
-      ...resume, // Include full resume data for modal
+      ...resume,
    };
 }
 
@@ -804,16 +1177,17 @@ const navItems = [
 
 const quickActions = [
    { label: "New Resume", icon: Plus, href: "/resume", color: "text-white/50" },
-   { label: "Templates", icon: Layers, href: "/resume-builder/templates", color: "text-white/50" },
+   { label: "Templates", icon: Layers, href: "/resume", color: "text-white/50" },
    { label: "Analytics", icon: BarChart2, href: "/dashboard/analytics", color: "text-white/50" },
    { label: "Settings", icon: Settings, href: "/dashboard/settings", color: "text-white/50" },
 ];
 
+// ✅ TEMPLATE LIST - Maps to Resume Builder templates
 const recTemplates = [
-   { name: "Modern", used: true, emoji: "◈" },
-   { name: "Professional", used: true, emoji: "◻" },
-   { name: "Executive", used: false, emoji: "▣" },
-   { name: "Creative", used: false, emoji: "◆" },
+   { name: "Modern", id: "modern", used: true, emoji: "◈", description: "Clean and contemporary design" },
+   { name: "Professional", id: "professional", used: true, emoji: "◻", description: "Corporate-style layout" },
+   { name: "Minimal", id: "minimal", used: false, emoji: "📄", description: "Simple and focused" },
+   { name: "Creative", id: "creative", used: false, emoji: "◆", description: "Unique and bold design" },
 ];
 
 // ── Skeleton ───────────────────────────────────────────────────────────────────
@@ -838,10 +1212,10 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
    const mainRef = useRef<HTMLDivElement>(null);
    const inView = useInView(mainRef, { once: true, margin: "-40px" });
 
-   // Transform resume data from API
    const resumes = myResumes?.data?.map(transformResume) || [];
    const resumeCount = resumes.length;
    const storagePercent = Math.round((resumeCount / 10) * 100);
+   const { loadResume } = useResumeApi();
 
    // Handle modal open
    const handleOpenModal = (resume: any) => {
@@ -859,6 +1233,12 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
       const t = setTimeout(() => setLoading(false), 900);
       return () => clearTimeout(t);
    }, []);
+
+   useEffect(() => {
+      (async () => {
+         await loadResume();
+      })();
+   }, []); // eslint-disable-line
 
    if (loading) return <Skeleton />;
 
@@ -879,7 +1259,7 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
             style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }}
          />
 
-         {/* ── Resume Modal (Rendered at top level) ── */}
+         {/* ── Resume Modal ── */}
          <ResumeModal resume={selectedResume} isOpen={showResumeModal} onClose={handleCloseModal} />
 
          {/* ── Top nav ── */}
@@ -905,7 +1285,6 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                      <Home size={11} /> Home
                   </Link>
 
-                  {/* Avatar */}
                   <div className="flex items-center gap-2.5 pl-2 border-l border-white/[0.06]">
                      <div className="hidden sm:block">
                         <p className="text-[10px] font-mono text-white/25">Pro Plan</p>
@@ -920,12 +1299,10 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                {/* ── Sidebar ── */}
                <motion.aside initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.65, ease }} className="lg:col-span-1">
                   <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm p-5 sticky top-6">
-                     {/* User card */}
                      <div className="text-center mb-6 pb-6 border-b border-white/[0.05]">
                         <span className="inline-block mt-2 px-2.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/[0.06] text-[10px] font-mono text-emerald-400/60 uppercase tracking-wider">Pro Plan</span>
                      </div>
 
-                     {/* Nav */}
                      <nav className="space-y-1 mb-6">
                         {navItems.map((item) => {
                            const Icon = item.icon;
@@ -945,7 +1322,6 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                         })}
                      </nav>
 
-                     {/* Storage */}
                      <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
                         <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/25 mb-3">Storage</p>
                         <div className="flex justify-between text-[11px] font-mono text-white/30 mb-2">
@@ -992,9 +1368,12 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                   <motion.div initial={{ opacity: 1, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.65, ease, delay: 0.38 }} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm p-6">
                      <div className="flex items-center justify-between mb-5">
                         <p className="text-xs font-mono uppercase tracking-[0.18em] text-white/30">Recent Resumes {resumeCount > 0 && <span className="text-white/20">({resumeCount})</span>}</p>
-                        <Link href="/resume-dashboard" className="inline-flex items-center gap-1 text-[11px] font-mono text-white/25 hover:text-white/50 transition-colors">
-                           View all <ChevronRight size={11} />
-                        </Link>
+                        <button
+                           onClick={() => loadResume()}
+                           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] text-white/35 text-xs font-mono uppercase tracking-widest hover:border-white/20 hover:text-white/55 transition-all duration-200"
+                        >
+                           <RefreshCw size={12} /> Load Resumes
+                        </button>
                      </div>
 
                      {resumes.length === 0 ? (
@@ -1013,7 +1392,6 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                                  transition={{ duration: 0.5, ease, delay: 0.45 + i * 0.08 }}
                                  className="group flex items-center gap-4 p-4 rounded-xl border border-white/[0.06] bg-white/[0.01] hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-200"
                               >
-                                 {/* Doc icon */}
                                  <div className="flex-none w-10 h-12 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center justify-center">
                                     <FileText size={14} className="text-white/20" />
                                  </div>
@@ -1025,7 +1403,6 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                                     </p>
                                  </div>
                                  <div className="flex items-center gap-1.5 flex-none">
-                                    {/* View Button */}
                                     <button
                                        onClick={() => handleOpenModal(r)}
                                        className="w-8 h-8 rounded-lg border border-white/[0.06] bg-white/[0.02] flex items-center justify-center text-white/20 hover:text-white/50 hover:border-white/15 transition-all duration-150 cursor-pointer"
@@ -1034,7 +1411,6 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                                        <Eye size={13} />
                                     </button>
 
-                                    {/* Download Button */}
                                     <button
                                        className="w-8 h-8 rounded-lg border border-white/[0.06] bg-white/[0.02] flex items-center justify-center text-white/20 hover:text-white/50 hover:border-white/15 transition-all duration-150 cursor-pointer"
                                        title="Download Resume"
@@ -1042,13 +1418,19 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                                        <Download size={13} />
                                     </button>
 
-                                    {/* Edit Button */}
-                                    <Link
+                                    {/* <Link
                                        href={`/resume-builder?edit=${r.id}`}
                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/35 text-[11px] font-mono uppercase tracking-widest hover:border-white/20 hover:text-white/60 transition-all duration-150"
                                     >
                                        <Pencil size={10} /> Edit
-                                    </Link>
+                                    </Link> */}
+                                    <button
+                                       onClick={() => handleOpenModal(r)}
+                                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/35 text-[11px] font-mono uppercase tracking-widest hover:border-white/20 hover:text-white/60 transition-all duration-150"
+                                       title="View Resume"
+                                    >
+                                       <Pencil size={10} /> Edit
+                                    </button>
                                  </div>
                               </motion.div>
                            ))}
@@ -1078,24 +1460,23 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                         </div>
                      </motion.div>
 
-                     {/* Recommended templates */}
+                     {/* ✅ Recommended templates - NOW WITH NAVIGATION */}
                      <motion.div initial={{ opacity: 1, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, ease, delay: 0.62 }} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm p-5">
                         <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/25 mb-4">Recommended Templates</p>
                         <div className="space-y-2">
                            {recTemplates.map((t) => (
-                              <div key={t.name} className="group flex items-center gap-3 p-3 rounded-xl border border-white/[0.05] hover:border-white/[0.12] hover:bg-white/[0.03] transition-all duration-200">
-                                 <div className="w-8 h-8 rounded-lg border border-white/[0.07] bg-white/[0.03] flex items-center justify-center text-base text-white/30">{t.emoji}</div>
+                              <Link
+                                 key={t.id}
+                                 href={`/resume?template=${t.id}`}
+                                 className="group flex items-center gap-3 p-3 rounded-xl border border-white/[0.05] hover:border-white/[0.12] hover:bg-white/[0.03] transition-all duration-200 cursor-pointer"
+                              >
+                                 <div className="w-8 h-8 rounded-lg border border-white/[0.07] bg-white/[0.03] flex items-center justify-center text-base text-white/30 group-hover:text-white/60 transition-colors">{t.emoji}</div>
                                  <div className="flex-1 min-w-0">
                                     <p className="text-xs font-semibold text-white/55 group-hover:text-white/70 transition-colors">{t.name}</p>
-                                    <p className="text-[10px] font-mono text-white/20">{t.used ? "Used in your resumes" : "Try this template"}</p>
+                                    <p className="text-[10px] font-mono text-white/20">{t.description}</p>
                                  </div>
-                                 <Link
-                                    href={`/resume-builder?template=${t.name.toLowerCase()}`}
-                                    className="px-3 py-1.5 rounded-lg border border-white/[0.07] bg-white/[0.02] text-[10px] font-mono text-white/25 hover:border-white/20 hover:text-white/50 transition-all duration-150"
-                                 >
-                                    {t.used ? "Reuse" : "Try"}
-                                 </Link>
-                              </div>
+                                 <ChevronRight size={14} className="text-white/20 group-hover:text-white/50 transition-colors" />
+                              </Link>
                            ))}
                         </div>
                      </motion.div>

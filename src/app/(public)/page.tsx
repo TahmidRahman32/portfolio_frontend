@@ -11,56 +11,86 @@ import ResumePromo from "@/components/comonLayout/HeroSection/ResumePromo";
 // import ResumePromo from "@/components/HeroSection/ResumePromo";
 // import TemplatesPage from "@/components/HeroSection/Tamplete";
 // import ProjectsSection from "@/components/projects/Project";
-import { Bitcoin, Globe, Link, Zap } from "lucide-react";
+import { Home, User, Briefcase, Phone, FileText, LayoutDashboard, LogIn, UserPlus, FileBadge, PanelsTopLeft, MessageSquareQuote, LayoutTemplate, Columns3 } from "lucide-react";
+
 const chainData: ChainItem[] = [
    {
       id: 1,
-      name: "Ethereum",
-      icon: Globe,
-      details: "Mainnet • 12.5M+ transactions",
-      logo: "https://assets.coingecko.com/coins/images/279/small/ethereum.png", // Working alternative
+      name: "Home",
+      icon: Home,
+      details: "Welcome section",
    },
    {
       id: 2,
-      name: "Bitcoin",
-      icon: Bitcoin,
-      details: "Layer 1 • Store of value",
-      logo: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png", // Working alternative
+      name: "About",
+      icon: User,
+      details: "Learn more about me",
    },
    {
       id: 3,
-      name: "Polygon",
-      icon: Link,
-      details: "EVM compatible • Low fees",
-      logo: "https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png", // Working alternative
+      name: "Service",
+      icon: Briefcase,
+      details: "What I offer",
    },
    {
       id: 4,
-      name: "Lightning Network",
-      icon: Zap,
-      details: "Bitcoin L2 • Instant payments",
-      // No logo - will use icon
+      name: "Contact",
+      icon: Phone,
+      details: "Get in touch",
    },
    {
       id: 5,
-      name: "Lightning Network",
-      icon: Zap,
-      details: "Bitcoin L2 • Instant payments",
-      // No logo - will use icon
+      name: "Resume",
+      icon: FileText,
+      details: "View my resume",
    },
    {
       id: 6,
-      name: "Lightning Network",
-      icon: Zap,
-      details: "Bitcoin L2 • Instant payments",
-      // No logo - will use icon
+      name: "Dashboard",
+      icon: LayoutDashboard,
+      details: "Admin dashboard",
    },
    {
       id: 7,
-      name: "Lightning Network",
-      icon: Zap,
-      details: "Bitcoin L2 • Instant payments",
-      // No logo - will use icon
+      name: "Login",
+      icon: LogIn,
+      details: "Access your account",
+   },
+   {
+      id: 8,
+      name: "Register",
+      icon: UserPlus,
+      details: "Create a new account",
+   },
+   {
+      id: 9,
+      name: "CV",
+      icon: FileBadge,
+      details: "Professional CV builder",
+   },
+   {
+      id: 10,
+      name: "Footer",
+      icon: Columns3,
+      details: "Website footer section",
+   },
+   {
+      id: 11,
+      name: "Review",
+      icon: MessageSquareQuote,
+      details: "Client feedback & testimonials",
+   },
+   {
+      id: 12,
+      name: "Navbar",
+      icon: PanelsTopLeft,
+      details: "Top navigation menu",
+   },
+   {
+      id: 13,
+      name: "Template",
+      icon: LayoutTemplate,
+      details: "Ready-made website templates",
    },
 ];
 

@@ -58,13 +58,15 @@ import { registerSchema } from "@/zod/registerValidation";
 
 export const submitAction = async (_currentState: ActionState, formData: FormData): Promise<ActionState> => {
    // Extract values from FormData
-   const name = formData.get("name") as string;
+   const first_name = formData.get("first_name") as string;
+   const last_name = formData.get("last_name") as string;
    const email = formData.get("email") as string;
    const password = formData.get("password") as string;
    const confirmPassword = formData.get("confirmPassword") as string;
 
    // Validate with Zod
-   const result = registerSchema.safeParse({ name, email, password, confirmPassword });
+   const result = registerSchema.safeParse({ first_name, last_name, email, password, confirmPassword });
+
 
    if (!result.success) {
       // Convert Zod errors to a simple object
@@ -90,11 +92,11 @@ export const submitAction = async (_currentState: ActionState, formData: FormDat
       //    return { success: false, message: "Server configuration error. Please try again later." };
       // }
 
-      // console.log("Registration attempt with:", { name, email });
+      // console.log("Registration attempt with:", { first_name, last_name, email });
       const res = await serverFetch.post(`/user/create`, {
          // method: "POST",
          headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ name, email, password }),
+         body: JSON.stringify({ first_name, last_name, email, password }),
       });
 
       // console.log(res, "set-user-resister");

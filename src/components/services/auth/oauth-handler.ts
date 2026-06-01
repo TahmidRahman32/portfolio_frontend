@@ -81,8 +81,8 @@ export function initiateOAuthLogin(provider: "google" | "github", redirectTo?: s
     ? `${oauthUrl}?redirect=${encodeURIComponent(redirectTo)}`
     : oauthUrl;
 
-  console.log(`🔄 Initiating ${provider} OAuth login...`);
-  console.log(`📡 Redirecting to: ${urlWithParams}`);
+  // console.log(`🔄 Initiating ${provider} OAuth login...`);
+  // console.log(`📡 Redirecting to: ${urlWithParams}`);
 
   // Redirect user to OAuth endpoint
   // The backend will handle the OAuth flow with Passport

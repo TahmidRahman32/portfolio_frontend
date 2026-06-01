@@ -214,7 +214,7 @@ export async function proxy(request: NextRequest) {
             return NextResponse.redirect(new URL("/login", request.url));
          }
          userRole = verifiedToken.role as UserRole;
-         console.log(userRole, "check user role");
+         // console.log(userRole, "check user role");
       } catch (error) {
          console.error("JWT verification failed:", (error as Error).message);
          await deleteCookie("accessToken");

@@ -448,11 +448,11 @@ export default function LoginPage() {
          console.error("❌ OAuth error:", callbackStatus.error);
          toast.error("OAuth Login Failed", {
             description: callbackStatus.error,
-            duration: 5000,
+            
          });
          clearOAuthParams();
       } else if (callbackStatus?.code) {
-         console.log("✅ OAuth callback with code");
+         // console.log("✅ OAuth callback with code");
          // The backend should have already set cookies and redirected
          // This is just for safety
          clearOAuthParams();
@@ -462,11 +462,10 @@ export default function LoginPage() {
    // Handle action state changes
    useEffect(() => {
       if (state.message) {
-         if (state.success) {
-            console.log("✅ Login successful:", state.message);
+         if (state?.success) {
+            // console.log("✅ Login successful:", state.message);
             toast.success("Login Successful!", {
                description: state.message,
-               duration: 3000,
             });
             // Redirect to dashboard
             setTimeout(() => {
@@ -476,7 +475,6 @@ export default function LoginPage() {
             console.error("❌ Login failed:", state.message);
             toast.error("Login Failed", {
                description: state.message,
-               duration: 4000,
             });
          }
       }
@@ -486,7 +484,7 @@ export default function LoginPage() {
    const handleGoogleLogin = async () => {
       try {
          setOauthLoading("google");
-         console.log("🔵 Starting Google OAuth flow...");
+         // console.log("🔵 Starting Google OAuth flow...");
          
          // This will redirect to backend OAuth endpoint
          initiateOAuthLogin("google", "/user/dashboard");
@@ -495,14 +493,12 @@ export default function LoginPage() {
          setOauthLoading(null);
          toast.error("Google Login", {
             description: "Failed to initiate Google login",
-            duration: 4000,
          });
       } catch (error) {
          console.error("❌ Google login error:", error);
          setOauthLoading(null);
          toast.error("Google Login Error", {
             description: "An unexpected error occurred",
-            duration: 4000,
          });
       }
    };

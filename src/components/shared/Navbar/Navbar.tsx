@@ -59,7 +59,7 @@ export default async function Navbar() {
                   </div>
                   {/* User menu */}
                   {/* <UserMenu /> */}
-                 {accessToken && <NavDropdownMenu userinfo={userInfo} />}
+                 {accessToken ? <NavDropdownMenu userinfo={userInfo} /> : <Link href="/login"><Button variant="outline" size="lg">Login</Button></Link>}
                </div>
             </div>
          </header>

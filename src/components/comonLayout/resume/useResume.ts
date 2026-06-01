@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -20,6 +18,15 @@ export interface UseResumeApiReturn {
    deleteResume: () => Promise<boolean>;
 }
 
+const formatDateToFull = (dateStr: string): string => {
+   if (!dateStr) return "";
+   // Convert YYYY-MM to YYYY-MM-DD
+   if (dateStr.match(/^\d{4}-\d{2}$/)) {
+      return `${dateStr}-01`;
+   }
+   return dateStr;
+};
+
 // ── Hook ───────────────────────────────────────────────────────────────────────
 export function useResumeApi(): UseResumeApiReturn {
    const [apiStatus, setApiStatus] = useState<ApiStatus>("idle");
@@ -29,16 +36,35 @@ export function useResumeApi(): UseResumeApiReturn {
 
    // ── Save ───────────────────────────────────────────────────────────────────
    const saveResume = useCallback(async (data: ApiResumeData): Promise<boolean> => {
+      //  console.log(data, "save resume use call back")
       setApiStatus("saving");
-
       // Show persistent loading toast
       toastIdRef.current = toast.loading("Saving your resume…", {
          description: "Please wait while we securely store your data.",
       });
 
       try {
-         const result = await createResume(data);
-           console.log(result, "save resume")
+         if (!data.personalInfo) {
+            throw new Error("Personal information is required");
+         }
+         const formattedData = {
+            ...data,
+            education:
+               data.education?.map((edu: any) => ({
+                  ...edu,
+                  startDate: formatDateToFull(edu.startDate),
+                  endDate: formatDateToFull(edu.endDate),
+               })) || [],
+            workExperience:
+               data.workExperience?.map((exp: any) => ({
+                  ...exp,
+                  startDate: formatDateToFull(exp.startDate),
+                  endDate: formatDateToFull(exp.endDate),
+               })) || [],
+         };
+         // console.log("📝 Formatted data:", formattedData);
+         const result = await createResume(formattedData);
+         // console.log(result, "save resume");
          if (result.success) {
             setApiStatus("saved");
             setLastSaved(new Date());
@@ -83,7 +109,7 @@ export function useResumeApi(): UseResumeApiReturn {
 
       try {
          const result = await fetchResume();
-         console.log(result, "resume actions")
+         console.log(result, "resume actions");
 
          if (result.success && result.data) {
             setApiStatus("idle");

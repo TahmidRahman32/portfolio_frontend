@@ -2,8 +2,9 @@
 import { Button } from "@/components/ui/button";
 // import { Facebook, Github, Instagram, LucideLinkedin} from "lucide-react";
 import { AuroraTextEffect } from "../nameSection/UiStyle";
-
+import { motion } from "framer-motion";
 import {  FaFacebook, FaGithub, FaInstagram, FaLinkedin } from "react-icons/fa";
+import Link from "next/link";
 
 
 interface Footer7Props {
@@ -15,10 +16,10 @@ interface Footer7Props {
 }
 
 const defaultSocialLinks = [
-   { icon: <FaInstagram className="size-7" />, href: "https://www.instagram.com/ausaf_tahmid/?hl=en", label: "Instagram" },
-   { icon: <FaFacebook className="size-7" />, href: "https://www.facebook.com/ahmed.ausaf.tahmid/", label: "Facebook" },
+   { icon: <FaInstagram className="size-7" />, href: "https://www.instagram.com/ausaf_tahmid", label: "Instagram" },
+   { icon: <FaFacebook className="size-7" />, href: "https://www.facebook.com/ahmed.ausaf.tahmid", label: "Facebook" },
    { icon: <FaGithub className="size-7" />, href: "https://github.com/TahmidRahman32?tab=repositories", label: "GitHub" },
-   { icon: <FaLinkedin className="size-7" />, href: "https://www.linkedin.com/in/gaziur-rahman-a194a8331/", label: "LinkedIn" },
+   { icon: <FaLinkedin className="size-7" />, href: "https://www.linkedin.com/in/gaziur-rahman-a194a8331", label: "LinkedIn" },
 ];
 
 const Box1 = ({ socialLinks = defaultSocialLinks }: Footer7Props) => {
@@ -40,18 +41,42 @@ const Box1 = ({ socialLinks = defaultSocialLinks }: Footer7Props) => {
             </p>
          </div>
          <div className="flex justify-center ">
-            <ul className="text-accent flex items-center space-x-6">
+            {/* <ul className="text-accent flex items-center space-x-6">
                {socialLinks.map((social, idx) => (
                   <li key={idx} className="hover:text- font-medium p-1 rounded-full text-black bg-white transition-colors duration-300">
-                     <a href={social.href} aria-label={social.label}>
+                     <Link target="_blank" rel="noopener noreferrer" title={social.label} href={social.href} aria-label={social.label}>
                         {social.icon}
-                        
-                     </a>
+                     </Link>
                   </li>
                ))}
-            </ul>
+            </ul> */}
+            <div className="flex items-center gap-4">
+               {socialLinks.map((social, idx) => (
+                  <motion.a
+                     key={idx}
+                     href={social.href}
+                     aria-label={social.label}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     whileHover={{ scale: 1.2, rotate: 5 }}
+                     whileTap={{ scale: 0.95 }}
+                     className="w-10 h-10 rounded-full bg-white/5 hover:bg-blue-600/20 border border-white/10 hover:border-blue-500/50 flex items-center justify-center text-gray-400 hover:text-blue-400 transition-all duration-300"
+                  >
+                     {social.icon}
+                  </motion.a>
+               ))}
+            </div>
          </div>
-         <Button className="w-36 mx-auto">Contact Me</Button>
+         <motion.a
+            href="/contact"
+            aria-label="Contact Me"
+            whileHover={{ scale: 1.2, rotate: 0 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-28 h-10 rounded-full bg-white/10 hover:bg-blue-100/20 border border-white/10 hover:border-blue-100/50 flex items-center justify-center text-gray-200 hover:text-blue-400 transition-all duration-300 absolute bottom-32 left-1/4 transform -translate-x-1/2 "
+         >
+           Contact Me
+         </motion.a>
+         
       </div>
    );
 };

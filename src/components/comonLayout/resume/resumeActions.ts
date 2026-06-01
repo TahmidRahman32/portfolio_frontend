@@ -593,6 +593,7 @@ export async function createResume(resumeData: any): Promise<ApiResponse> {
    try {
       // 1. Validate data
       const validation = validateResumeData(resumeData);
+      // console.log("validation check",validation)
       if (!validation.valid) {
          console.error("Validation errors:", validation.errors);
          return {
@@ -605,7 +606,7 @@ export async function createResume(resumeData: any): Promise<ApiResponse> {
 
       // 2. Transform data
       const transformedData = transformResumeData(resumeData);
-      console.log("📤 Creating resume with transformed data:", transformedData);
+      // console.log("📤 Creating resume with transformed data:", transformedData);
 
       // 3. Make API request
       const res = await serverFetch.post(`/resume/create`, {
@@ -616,8 +617,8 @@ export async function createResume(resumeData: any): Promise<ApiResponse> {
       });
 
       const result = await res.json();
-      console.log("Response status:", res.status);
-      console.log("Response:", result);
+      // console.log("Response status:", res.status);
+      // console.log("Response:", result);
 
       // 4. Handle response
       if (!res.ok) {
@@ -630,7 +631,7 @@ export async function createResume(resumeData: any): Promise<ApiResponse> {
          };
       }
 
-      console.log("✅ Resume created successfully");
+      // console.log("✅ Resume created successfully");
       return {
          success: true,
          message: result.message || "Resume created successfully",
@@ -655,16 +656,16 @@ export async function createResume(resumeData: any): Promise<ApiResponse> {
  */
 export async function fetchResume(): Promise<ApiResponse> {
    try {
-      console.log("📥 Fetching resume...");
+      // console.log("📥 Fetching resume...");
 
-      const res = await serverFetch.get(`/resume`, {
+      const res = await serverFetch.get(`/resume/my`, {
          headers: {
             "Content-Type": "application/json",
          },
       });
 
       const result = await res.json();
-      console.log("Fetch response:", result);
+      // console.log("Fetch response:", result);
 
       // 404 = resume not found (OK for new users)
       if (res.status === 404) {
@@ -677,7 +678,7 @@ export async function fetchResume(): Promise<ApiResponse> {
 
       // Other errors
       if (!res.ok) {
-         console.error("❌ Fetch failed:", result);
+         // console.error("❌ Fetch failed:", result);
          return {
             success: false,
             message: result.message || "Failed to fetch resume",
@@ -686,7 +687,7 @@ export async function fetchResume(): Promise<ApiResponse> {
          };
       }
 
-      console.log("✅ Resume fetched successfully");
+      // console.log("✅ Resume fetched successfully");
       return {
          success: true,
          message: "Resume fetched successfully",
@@ -711,7 +712,7 @@ export async function fetchResume(): Promise<ApiResponse> {
  */
 export async function updateResume(resumeData: Partial<ResumeData>): Promise<ApiResponse> {
    try {
-      console.log("📝 Updating resume...");
+      // console.log("📝 Updating resume...");
 
       const transformedData = transformResumeData(resumeData);
 
@@ -723,7 +724,7 @@ export async function updateResume(resumeData: Partial<ResumeData>): Promise<Api
       });
 
       const result = await res.json();
-      console.log("Update response:", result);
+      // console.log("Update response:", result);
 
       if (!res.ok) {
          console.error("❌ Update failed:", result);
@@ -735,7 +736,7 @@ export async function updateResume(resumeData: Partial<ResumeData>): Promise<Api
          };
       }
 
-      console.log("✅ Resume updated successfully");
+      // console.log("✅ Resume updated successfully");
       return {
          success: true,
          message: "Resume updated successfully",
@@ -760,7 +761,7 @@ export async function updateResume(resumeData: Partial<ResumeData>): Promise<Api
  */
 export async function deleteResumeData(): Promise<ApiResponse> {
    try {
-      console.log("🗑️ Deleting resume...");
+      // console.log("🗑️ Deleting resume...");
 
       const res = await serverFetch.delete(`/resume`, {
          headers: {
@@ -769,7 +770,7 @@ export async function deleteResumeData(): Promise<ApiResponse> {
       });
 
       const result = await res.json();
-      console.log("Delete response:", result);
+      // console.log("Delete response:", result);
 
       if (!res.ok) {
          console.error("❌ Delete failed:", result);
@@ -781,7 +782,7 @@ export async function deleteResumeData(): Promise<ApiResponse> {
          };
       }
 
-      console.log("✅ Resume deleted successfully");
+      // console.log("✅ Resume deleted successfully");
       return {
          success: true,
          message: "Resume deleted successfully",
@@ -807,6 +808,7 @@ export async function getMyResume() {
          },
       });
       const result = await response.json();
+      // console.log("My resume:", result);
       return result;
    } catch (error: any) {
       console.log(error);

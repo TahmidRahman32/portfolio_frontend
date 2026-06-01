@@ -145,12 +145,10 @@ interface FooterProps {
 }
 
 const defaultSocialLinks = [
-  
-      { icon: <FaInstagram className="size-7" />, href: "https://www.instagram.com/ausaf_tahmid/?hl=en", label: "Instagram" },
-      { icon: <FaFacebook className="size-7" />, href: "https://www.facebook.com/ahmed.ausaf.tahmid/", label: "Facebook" },
-      { icon: <FaGithub className="size-7" />, href: "https://github.com/TahmidRahman32?tab=repositories", label: "GitHub" },
-      { icon: <FaLinkedin className="size-7" />, href: "https://www.linkedin.com/in/gaziur-rahman-a194a8331/", label: "LinkedIn" },
-  
+   { icon: <FaInstagram className="size-7" />, href: "https://www.instagram.com/ausaf_tahmid", label: "Instagram" },
+   { icon: <FaFacebook className="size-7" />, href: "https://www.facebook.com/ahmed.ausaf.tahmid", label: "Facebook" },
+   { icon: <FaGithub className="size-7" />, href: "https://github.com/TahmidRahman32?tab=repositories", label: "GitHub" },
+   { icon: <FaLinkedin className="size-7" />, href: "https://www.linkedin.com/in/gaziur-rahman-a194a8331", label: "LinkedIn" },
 ];
 
 const defaultSections: FooterSection[] = [

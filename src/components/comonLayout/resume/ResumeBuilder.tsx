@@ -17,12 +17,12 @@
 // import TemplateSelector from "./TemplateSelector";
 
 // // import { ResumeData, PersonalInfo, Education, WorkExperience, Skill, Project, ResumeTemplate } from "../type/Resume";
-// // import { DEFAULT_TEMPLATE, TEMPLATES } from "@/utils/templates";
-// import { useResumeApi } from "./useResume";
-// import { Education, PersonalInfo, Project, ResumeData, ResumeTemplate, Skill, WorkExperience } from "@/Types/Resume";
 // import { DEFAULT_TEMPLATE, TEMPLATES } from "@/utils/templates";
 // // import { useResumeApi } from "./useResumeApi";
+// import { ResumeData, PersonalInfo, Education, WorkExperience, Skill, Project, ResumeTemplate } from "@/Types/Resume";
+// import { useResumeApi } from "./useResume";
 
+// // ── Defaults ──────────────────────────────────────────────────────────────────
 // const defaultResumeData: ResumeData = {
 //    personalInfo: { fullName: "", email: "", phone: "", address: "", linkedin: "", github: "", website: "" },
 //    summary: "",
@@ -63,37 +63,59 @@
 // export const addBtnCls = "inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-xs font-semibold tracking-tight hover:bg-white/90 transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
 // export const removeBtnCls = "flex-none w-8 h-8 rounded-lg border border-red-500/20 bg-red-500/[0.06] flex items-center justify-center text-red-400/60 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/[0.1] transition-all duration-200";
 
+// // ── API payload mapper ─────────────────────────────────────────────────────────
 // function toApiFormat(data: ResumeData, template: ResumeTemplate) {
+//    console.log(data, "to api format data")
 //    return {
 //       title: `${data.personalInfo.fullName || "My"} Resume`,
 //       fullName: data.personalInfo.fullName,
 //       email: data.personalInfo.email,
 //       phone: data.personalInfo.phone,
+//       address: data.personalInfo.address,
+//       linkedin: data.personalInfo.linkedin,
+//       github: data.personalInfo.github,
+//       website: data.personalInfo.website,
 //       summary: data.summary,
+
+//       // ✅ FIXED: Proper endDate handling
 //       experience: data.workExperience.map((w) => ({
 //          jobTitle: w.position,
 //          company: w.company,
 //          startDate: w.startDate,
-//          endDate: w.current ? undefined : w.endDate,
+//          endDate: !w.current && w.endDate ? w.endDate : null,
 //          isCurrent: w.current,
 //          description: w.description,
 //       })),
+
 //       education: data.education.map((e) => ({
 //          degree: e.degree,
 //          institution: e.institution,
-//          field: e.fieldOfStudy,
-//          graduationDate: e.endDate,
+//          fieldOfStudy: e.fieldOfStudy,
+//          startDate: e.startDate,
+//          endDate: e.endDate,
+//          description: e.description,
 //          gpa: e.gpa,
 //       })),
+
 //       skills: data.skills.map((s) => ({
 //          name: s.name,
-//          proficiency: s.level >= 4 ? "expert" : s.level >= 3 ? "advanced" : s.level >= 2 ? "intermediate" : "beginner",
+//          level: s.level,
 //          category: s.category,
 //       })),
+
+//       // ✅ NEW: Include projects
+//       projects: (data.projects || []).map((p) => ({
+//          name: p.name,
+//          description: p.description,
+//          technologies: p.technologies,
+//          link: p.link,
+//       })),
+
 //       template,
 //    };
 // }
 
+// // ── Status badge ───────────────────────────────────────────────────────────────
 // function ApiStatusBadge({ status, lastSaved }: { status: string; lastSaved: Date | null }) {
 //    if (status === "idle" && !lastSaved) return null;
 //    const cfg = {
@@ -112,6 +134,7 @@
 //    );
 // }
 
+// // ── Component ──────────────────────────────────────────────────────────────────
 // export default function ResumeBuilder() {
 //    const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
 //    const [activeSection, setActiveSection] = useState("personal");
@@ -121,10 +144,12 @@
 
 //    const { apiStatus, isSaving, lastSaved, hasSaved, saveResume, loadResume, deleteResume } = useResumeApi();
 
+//    // console.log(resumeData, "resume Data for check")
+
+//    // Auto-load on mount
 //    useEffect(() => {
 //       (async () => {
 //          const saved = await loadResume();
-//          console.log(saved,"saved")
 //          if (saved) {
 //             setResumeData((prev) => ({
 //                ...prev,
@@ -166,7 +191,7 @@
 //          setActiveSection(Object.keys(errors)[0]);
 //          return;
 //       }
-//       console.log("resume Data", resumeData)
+//       console.log("handle save check", resumeData)
 //       await saveResume(toApiFormat(resumeData, selectedTemplate) as any);
 //    };
 
@@ -211,7 +236,7 @@
 //    const currentIdx = sections.findIndex((s) => s.id === activeSection);
 
 //    return (
-//       <div className="min-h-screen bg-[#080808] pt-18 md:pt-24 px-4 md:px-8">
+//       <div className="min-h-screen bg-[#080808] md:pt-24 px-4 md:px-8">
 //          <div
 //             aria-hidden
 //             className="pointer-events-none fixed inset-0 opacity-[0.025] z-0"
@@ -418,7 +443,7 @@
 //                            <span className="text-[10px] font-mono text-white/20">{TEMPLATES[selectedTemplate].name} · A4</span>
 //                         </div>
 //                         <div className="rounded-xl border border-white/[0.06] overflow-hidden bg-white">
-//                            <ResumePreview data={resumeData} template={selectedTemplate} />
+//                            <ResumePreview data={resumeData} template={selectedTemplate} onEdit={() => setActiveSection("personal")} onDownload={handleDownload} />
 //                         </div>
 //                      </div>
 //                   </motion.div>
@@ -447,9 +472,7 @@ import ResumePreview from "./ResumePreview";
 import ResumePDFDocument from "./ResumePDFDocument";
 import TemplateSelector from "./TemplateSelector";
 
-// import { ResumeData, PersonalInfo, Education, WorkExperience, Skill, Project, ResumeTemplate } from "../type/Resume";
 import { DEFAULT_TEMPLATE, TEMPLATES } from "@/utils/templates";
-// import { useResumeApi } from "./useResumeApi";
 import { ResumeData, PersonalInfo, Education, WorkExperience, Skill, Project, ResumeTemplate } from "@/Types/Resume";
 import { useResumeApi } from "./useResume";
 
@@ -465,7 +488,7 @@ const defaultResumeData: ResumeData = {
 
 export const ease = [0.22, 1, 0.36, 1] as const;
 
-const sections = [
+export const sections = [
    { id: "template", label: "Template", icon: Layers },
    { id: "personal", label: "Personal", icon: User },
    { id: "summary", label: "Summary", icon: AlignLeft },
@@ -495,34 +518,61 @@ export const addBtnCls = "inline-flex items-center gap-2 px-5 py-2.5 rounded-xl 
 export const removeBtnCls = "flex-none w-8 h-8 rounded-lg border border-red-500/20 bg-red-500/[0.06] flex items-center justify-center text-red-400/60 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/[0.1] transition-all duration-200";
 
 // ── API payload mapper ─────────────────────────────────────────────────────────
+// ✅ FIX: Keep personalInfo NESTED — don't flatten it
+// resumeActions.ts validates data.personalInfo, so structure must match
 function toApiFormat(data: ResumeData, template: ResumeTemplate) {
    return {
-      title: `${data.personalInfo.fullName || "My"} Resume`,
-      fullName: data.personalInfo.fullName,
-      email: data.personalInfo.email,
-      phone: data.personalInfo.phone,
+      // ✅ FIXED: Keep personalInfo as nested object (not flattened)
+      personalInfo: {
+         fullName: data.personalInfo.fullName,
+         email: data.personalInfo.email,
+         phone: data.personalInfo.phone,
+         address: data.personalInfo.address || "",
+         linkedin: data.personalInfo.linkedin || "",
+         github: data.personalInfo.github || "",
+         website: data.personalInfo.website || "",
+         dateOfBirth: (data.personalInfo as any).dateOfBirth || "",
+         gender: (data.personalInfo as any).gender || "",
+         nationality: (data.personalInfo as any).nationality || "",
+         languages: (data.personalInfo as any).languages || "",
+      },
+
       summary: data.summary,
-      experience: data.workExperience.map((w) => ({
-         jobTitle: w.position,
+      template,
+
+      // ✅ FIXED: Keep field name as 'workExperience' (not 'experience')
+      // resumeActions.ts transformResumeData handles field name mapping internally
+      workExperience: data.workExperience.map((w) => ({
+         position: w.position,
          company: w.company,
          startDate: w.startDate,
-         endDate: w.current ? undefined : w.endDate,
-         isCurrent: w.current,
-         description: w.description,
+         endDate: w.current ? null : w.endDate || null,
+         current: w.current || false,
+         description: w.description || "",
       })),
+
       education: data.education.map((e) => ({
          degree: e.degree,
          institution: e.institution,
-         field: e.fieldOfStudy,
-         graduationDate: e.endDate,
-         gpa: e.gpa,
+         fieldOfStudy: e.fieldOfStudy || "",
+         startDate: e.startDate,
+         endDate: e.endDate,
+         description: (e as any).description || "",
+         gpa: (e as any).gpa || "",
       })),
+
       skills: data.skills.map((s) => ({
          name: s.name,
-         proficiency: s.level >= 4 ? "expert" : s.level >= 3 ? "advanced" : s.level >= 2 ? "intermediate" : "beginner",
-         category: s.category,
+         level: s.level,
+         category: s.category || "",
       })),
-      template,
+
+      projects: (data.projects || []).map((p) => ({
+         name: p.name,
+         description: p.description,
+         technologies: Array.isArray(p.technologies) ? p.technologies : [],
+         link: p.link || "",
+      })),
    };
 }
 
@@ -560,15 +610,25 @@ export default function ResumeBuilder() {
       (async () => {
          const saved = await loadResume();
          if (saved) {
+            // ✅ FIXED: saved data has nested personalInfo structure
+            const savedAny = saved as any;
             setResumeData((prev) => ({
                ...prev,
                personalInfo: {
                   ...prev.personalInfo,
-                  fullName: (saved as any).fullName ?? prev.personalInfo.fullName,
-                  email: (saved as any).email ?? prev.personalInfo.email,
-                  phone: (saved as any).phone ?? prev.personalInfo.phone,
+                  fullName: savedAny.personalInfo?.fullName ?? savedAny.fullName ?? prev.personalInfo.fullName,
+                  email: savedAny.personalInfo?.email ?? savedAny.email ?? prev.personalInfo.email,
+                  phone: savedAny.personalInfo?.phone ?? savedAny.phone ?? prev.personalInfo.phone,
+                  address: savedAny.personalInfo?.address ?? prev.personalInfo.address,
+                  linkedin: savedAny.personalInfo?.linkedin ?? prev.personalInfo.linkedin,
+                  github: savedAny.personalInfo?.github ?? prev.personalInfo.github,
+                  website: savedAny.personalInfo?.website ?? prev.personalInfo.website,
                },
-               summary: (saved as any).summary ?? prev.summary,
+               summary: savedAny.summary ?? prev.summary,
+               education: savedAny.education?.length ? savedAny.education : prev.education,
+               workExperience: savedAny.workExperience?.length ? savedAny.workExperience : prev.workExperience,
+               skills: savedAny.skills?.length ? savedAny.skills : prev.skills,
+               projects: savedAny.projects?.length ? savedAny.projects : prev.projects,
             }));
          }
       })();
@@ -600,7 +660,9 @@ export default function ResumeBuilder() {
          setActiveSection(Object.keys(errors)[0]);
          return;
       }
-      await saveResume(toApiFormat(resumeData, selectedTemplate) as any);
+      const payload = toApiFormat(resumeData, selectedTemplate);
+      // console.log("📤 Saving payload:", payload);
+      await saveResume(payload as any);
    };
 
    const handleDownload = async () => {
