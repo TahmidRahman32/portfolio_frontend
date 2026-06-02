@@ -1,4 +1,3 @@
-
 // "use client";
 
 // /**
@@ -9,14 +8,14 @@
 //   // Use the full API URL that includes the auth path
 //   // Backend routes are at: /api/v1/auth/google and /api/v1/auth/github
 //   const API_URL = process.env.NEXT_PUBLIC_BASE_API_URL || "http://localhost:5000/api/v1";
-  
+
 //   // Construct the full OAuth endpoint URL
 //   // If API_URL is "http://localhost:5000/api/v1"
 //   // We want: "http://localhost:5000/api/v1/auth/google?redirect=/dashboard"
 //   const oauthUrl = `${API_URL}/auth/${provider}`;
-  
+
 //   // Add redirect parameter if provided
-//   const urlWithParams = redirectTo 
+//   const urlWithParams = redirectTo
 //     ? `${oauthUrl}?redirect=${encodeURIComponent(redirectTo)}`
 //     : oauthUrl;
 
@@ -64,6 +63,153 @@
 // lib/oauth-handler.ts (or components/services/auth/oauth-handler.ts)
 // components/services/auth/oauth-handler.ts - COMPLETE VERSION WITH ALL FUNCTIONS
 
+// "use client";
+
+// import { serverFetch } from "@/lib/server-fetch";
+
+// /**
+//  * Initiates OAuth flow for Google or GitHub login
+//  * Redirects user to backend OAuth endpoint
+//  */
+// export function initiateOAuthLogin(provider: "google" | "github", redirectTo?: string) {
+//   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
+//   const oauthUrl = `${API_URL}/auth/${provider}`;
+
+//   const urlWithParams = redirectTo
+//     ? `${oauthUrl}?redirect=${encodeURIComponent(redirectTo)}`
+//     : oauthUrl;
+
+//   console.log(`🔄 Initiating ${provider} OAuth login...`);
+//   console.log(`📡 Redirecting to: ${urlWithParams}`);
+
+//   window.location.href = urlWithParams;
+// }
+
+// /**
+//  * Check if we're returning from OAuth callback
+//  * Extract any error messages from URL params
+//  */
+// export function getOAuthCallbackStatus() {
+//   if (typeof window === "undefined") return null;
+
+//   const params = new URLSearchParams(window.location.search);
+//   const error = params.get("error");
+//   const code = params.get("code");
+
+//   return {
+//     error: error ? decodeURIComponent(error) : null,
+//     code: code,
+//     isCallback: !!error || !!code,
+//   };
+// }
+
+// /**
+//  * Clear OAuth callback params from URL
+//  */
+// export function clearOAuthParams() {
+//   if (typeof window === "undefined") return;
+
+//   const url = new URL(window.location.toString());
+//   url.searchParams.delete("error");
+//   url.searchParams.delete("code");
+//   url.searchParams.delete("state");
+
+//   window.history.replaceState({}, document.title, url.toString());
+// }
+
+// /**
+//  * ✅ FIXED: Verify that OAuth authentication was successful
+//  *
+//  * This function:
+//  * 1. Calls a protected endpoint that requires authentication
+//  * 2. If successful, backend has set auth cookies
+//  * 3. Returns true if authentication verified
+//  * 4. Returns false if not authenticated
+//  *
+//  * Why this is needed:
+//  * - After OAuth callback, the backend sets auth cookies
+//  * - But we need to verify the cookies are actually set and valid
+//  * - We do this by calling a protected endpoint
+//  * - If it returns 200, user is authenticated
+//  * - If it returns 401, authentication failed
+//  */
+// export async function verifyOAuthAuthentication(): Promise<boolean> {
+//   try {
+//     console.log("🔐 Verifying OAuth authentication...");
+
+//     // Call a protected endpoint that requires authentication
+//     // This endpoint will fail if cookies are not set or invalid
+//     const response = await serverFetch.get("/auth/me", {
+//        credentials: "include",
+//        cache: "force-cache",
+//        next: { tags: ["user-info"] },
+//     });
+
+//     // If we get 200, user is authenticated
+//     if (response.ok) {
+//       console.log("✅ OAuth authentication verified!");
+//       return true;
+//     }
+
+//     // If we get 401, user is not authenticated
+//     if (response.status === 401) {
+//       console.error("❌ OAuth authentication failed - 401 Unauthorized");
+//       return false;
+//     }
+
+//     // For other errors, log and return false
+//     console.error(`❌ OAuth verification failed - Status: ${response.status}`);
+//     return false;
+//   } catch (error) {
+//     console.error("❌ OAuth verification error:", error);
+//     return false;
+//   }
+// }
+
+// /**
+//  * Check if user has valid auth cookies
+//  * Similar to verifyOAuthAuthentication but without throwing errors
+//  */
+// export async function hasAuthCookies(): Promise<boolean> {
+//   try {
+//      const response = await serverFetch.get("/auth/me", {
+//         credentials: "include",
+//         cache: "force-cache",
+//         next: { tags: ["user-info"] },
+//      });
+
+//     return response.ok;
+//   } catch {
+//     return false;
+//   }
+// }
+
+// /**
+//  * Get current authenticated user info from backend
+//  * Only works if user is authenticated (cookies are set)
+//  */
+// export async function getCurrentUser() {
+//   try {
+//     const response = await serverFetch.get("/auth/me", {
+//       credentials: "include",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//     });
+
+//     if (!response.ok) {
+//       return null;
+//     }
+
+//     const data = await response.json();
+//     return data.data || data;
+//   } catch (error) {
+//     console.error("Failed to fetch current user:", error);
+//     return null;
+//   }
+// }
+
 "use client";
 
 import { serverFetch } from "@/lib/server-fetch";
@@ -73,18 +219,21 @@ import { serverFetch } from "@/lib/server-fetch";
  * Redirects user to backend OAuth endpoint
  */
 export function initiateOAuthLogin(provider: "google" | "github", redirectTo?: string) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-  
-  const oauthUrl = `${API_URL}/auth/${provider}`;
-  
-  const urlWithParams = redirectTo 
-    ? `${oauthUrl}?redirect=${encodeURIComponent(redirectTo)}`
-    : oauthUrl;
+   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
-  console.log(`🔄 Initiating ${provider} OAuth login...`);
-  console.log(`📡 Redirecting to: ${urlWithParams}`);
+   const oauthUrl = `${API_URL}/auth/${provider}`;
 
-  window.location.href = urlWithParams;
+   const urlWithParams = redirectTo ? `${oauthUrl}?redirect=${encodeURIComponent(redirectTo)}` : oauthUrl;
+
+   console.log(`🔄 Initiating ${provider} OAuth login...`);
+   console.log(`📡 Redirecting to: ${urlWithParams}`);
+
+   // Store the current URL to return after OAuth
+   if (redirectTo) {
+      localStorage.setItem("oauth_redirect_to", redirectTo);
+   }
+
+   window.location.href = urlWithParams;
 }
 
 /**
@@ -92,121 +241,98 @@ export function initiateOAuthLogin(provider: "google" | "github", redirectTo?: s
  * Extract any error messages from URL params
  */
 export function getOAuthCallbackStatus() {
-  if (typeof window === "undefined") return null;
+   if (typeof window === "undefined") return null;
 
-  const params = new URLSearchParams(window.location.search);
-  const error = params.get("error");
-  const code = params.get("code");
+   const params = new URLSearchParams(window.location.search);
+   const error = params.get("error");
+   const code = params.get("code");
+   const status = params.get("status");
 
-  return {
-    error: error ? decodeURIComponent(error) : null,
-    code: code,
-    isCallback: !!error || !!code,
-  };
+   return {
+      error: error ? decodeURIComponent(error) : null,
+      code: code,
+      status: status,
+      isCallback: !!error || !!code || !!status,
+   };
 }
 
 /**
  * Clear OAuth callback params from URL
  */
 export function clearOAuthParams() {
-  if (typeof window === "undefined") return;
+   if (typeof window === "undefined") return;
 
-  const url = new URL(window.location.toString());
-  url.searchParams.delete("error");
-  url.searchParams.delete("code");
-  url.searchParams.delete("state");
+   const url = new URL(window.location.toString());
+   url.searchParams.delete("error");
+   url.searchParams.delete("code");
+   url.searchParams.delete("state");
+   url.searchParams.delete("status");
 
-  window.history.replaceState({}, document.title, url.toString());
+   window.history.replaceState({}, document.title, url.toString());
 }
 
 /**
- * ✅ FIXED: Verify that OAuth authentication was successful
- * 
- * This function:
- * 1. Calls a protected endpoint that requires authentication
- * 2. If successful, backend has set auth cookies
- * 3. Returns true if authentication verified
- * 4. Returns false if not authenticated
- * 
- * Why this is needed:
- * - After OAuth callback, the backend sets auth cookies
- * - But we need to verify the cookies are actually set and valid
- * - We do this by calling a protected endpoint
- * - If it returns 200, user is authenticated
- * - If it returns 401, authentication failed
+ * FIXED: Verify that OAuth authentication was successful
+ * This function now uses fetch directly with credentials to ensure cookies are sent
  */
 export async function verifyOAuthAuthentication(): Promise<boolean> {
-  try {
-    console.log("🔐 Verifying OAuth authentication...");
+   try {
+      console.log("🔐 Verifying OAuth authentication...");
 
-    // Call a protected endpoint that requires authentication
-    // This endpoint will fail if cookies are not set or invalid
-    const response = await serverFetch.get("/auth/me", {
-       credentials: "include",
-       cache: "force-cache",
-       next: { tags: ["user-info"] },
-    });
+      // Use direct fetch with credentials to ensure cookies are included
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
-    // If we get 200, user is authenticated
-    if (response.ok) {
-      console.log("✅ OAuth authentication verified!");
-      return true;
-    }
+      const response = await fetch(`${API_URL}/auth/me`, {
+         method: "GET",
+         credentials: "include", // CRITICAL: Include cookies
+         headers: {
+            "Content-Type": "application/json",
+         },
+      });
 
-    // If we get 401, user is not authenticated
-    if (response.status === 401) {
-      console.error("❌ OAuth authentication failed - 401 Unauthorized");
+      console.log(`📡 Verification response status: ${response.status}`);
+
+      if (response.ok) {
+         const data = await response.json();
+         console.log("✅ OAuth authentication verified!", data.data || data);
+         return true;
+      }
+
+      if (response.status === 401) {
+         console.error("❌ OAuth authentication failed - 401 Unauthorized");
+         return false;
+      }
+
+      console.error(`❌ OAuth verification failed - Status: ${response.status}`);
       return false;
-    }
-
-    // For other errors, log and return false
-    console.error(`❌ OAuth verification failed - Status: ${response.status}`);
-    return false;
-  } catch (error) {
-    console.error("❌ OAuth verification error:", error);
-    return false;
-  }
-}
-
-/**
- * Check if user has valid auth cookies
- * Similar to verifyOAuthAuthentication but without throwing errors
- */
-export async function hasAuthCookies(): Promise<boolean> {
-  try {
-     const response = await serverFetch.get("/auth/me", {
-        credentials: "include",
-        cache: "force-cache",
-        next: { tags: ["user-info"] },
-     });
-
-    return response.ok;
-  } catch {
-    return false;
-  }
+   } catch (error) {
+      console.error("❌ OAuth verification error:", error);
+      return false;
+   }
 }
 
 /**
  * Get current authenticated user info from backend
- * Only works if user is authenticated (cookies are set)
  */
 export async function getCurrentUser() {
-  try {
-    const response = await serverFetch.get("/auth/me", {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+   try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
-    if (!response.ok) {
+      const response = await fetch(`${API_URL}/auth/me`, {
+         credentials: "include",
+         headers: {
+            "Content-Type": "application/json",
+         },
+      });
+
+      if (!response.ok) {
+         return null;
+      }
+
+      const data = await response.json();
+      return data.data || data;
+   } catch (error) {
+      console.error("Failed to fetch current user:", error);
       return null;
-    }
-
-    const data = await response.json();
-    return data.data || data;
-  } catch (error) {
-    console.error("Failed to fetch current user:", error);
-    return null;
-  }
+   }
 }

@@ -833,7 +833,7 @@
 "use client";
 
 import { useState, useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
@@ -841,8 +841,7 @@ import Link from "next/link";
 import { loginSchema } from "@/zod/auth.validation";
 import z from "zod";
 import { submitActionLogin } from "@/components/services/auth/login.service";
-import { clearOAuthParams, getOAuthCallbackStatus, initiateOAuthLogin, verifyOAuthAuthentication, } from "@/components/services/auth/oauth-handler";
-// import { clearOAuthParams, getOAuthCallbackStatus, initiateOAuthLogin, verifyOAuthAuthentication, hasAuthCookies } from "@/components/services/auth/oauth-handler";
+import { clearOAuthParams, getOAuthCallbackStatus, initiateOAuthLogin, verifyOAuthAuthentication } from "@/components/services/auth/oauth-handler";
 
 // ── Shared tokens ──────────────────────────────────────────────────────────────
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -853,12 +852,12 @@ const fieldCls = (invalid: boolean) =>
    ${invalid ? "border-red-500/50 bg-red-500/[0.04] focus:border-red-500/60" : "border-white/[0.08] focus:border-white/25"}`;
 
 // ── Password field ─────────────────────────────────────────────────────────────
-function PasswordField({ value, onChange, onBlur, name, invalid }: any) {
+function PasswordField({ value, onChange, onBlur, name, invalid, disabled }: any) {
    const [show, setShow] = useState(false);
    return (
       <div className="relative">
-         <input name={name} value={value} onChange={onChange} onBlur={onBlur} type={show ? "text" : "password"} placeholder="••••••••" autoComplete="current-password" className={`${fieldCls(invalid)} pr-10`} />
-         <button type="button" tabIndex={-1} onClick={() => setShow((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/55 transition-colors">
+         <input name={name} value={value} onChange={onChange} onBlur={onBlur} type={show ? "text" : "password"} placeholder="••••••••" autoComplete="current-password" className={`${fieldCls(invalid)} pr-10`} disabled={disabled} />
+         <button type="button" tabIndex={-1} onClick={() => setShow((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/55 transition-colors" disabled={disabled}>
             {show ? <EyeOff size={15} /> : <Eye size={15} />}
          </button>
       </div>
@@ -903,11 +902,10 @@ type ActionState = {
    message?: string;
 };
 
-type LoginFormData = z.infer<typeof loginSchema>;
-
 // ── Component ──────────────────────────────────────────────────────────────────
 export default function LoginPage() {
    const router = useRouter();
+   const searchParams = useSearchParams();
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
    const [rememberMe, setRememberMe] = useState(false);
@@ -920,7 +918,7 @@ export default function LoginPage() {
       success: false,
    });
 
-   // ✅ FIXED: Handle OAuth callback with proper verification
+   // ✅ FIXED: Handle OAuth callback with proper verification and redirect
    useEffect(() => {
       const handleOAuthCallback = async () => {
          const callbackStatus = getOAuthCallbackStatus();
@@ -930,7 +928,7 @@ export default function LoginPage() {
             return;
          }
 
-         console.log("🔄 OAuth callback detected, processing...");
+         console.log("🔄 OAuth callback detected, processing...", callbackStatus);
 
          // Handle OAuth error
          if (callbackStatus?.error) {
@@ -944,37 +942,47 @@ export default function LoginPage() {
             return;
          }
 
-         // Verify authentication was successful
+         // Show loading state
          setIsVerifyingOAuth(true);
          const toastId = toast.loading("Verifying authentication...");
+
+         // Small delay to ensure cookies are set by the backend
+         await new Promise((resolve) => setTimeout(resolve, 1000));
 
          try {
             // ✅ CRITICAL: Verify cookies were set by calling protected endpoint
             const isAuthenticated = await verifyOAuthAuthentication();
 
             if (isAuthenticated) {
-               console.log("✅ OAuth authentication verified!");
+               console.log("✅ OAuth authentication verified successfully!");
+
                toast.success("Login Successful!", {
                   id: toastId,
                   description: "Redirecting to dashboard...",
                   duration: 2000,
                });
+
+               // Clear OAuth params from URL
                clearOAuthParams();
-               setOauthLoading(null);
+
+               // Get redirect target from localStorage or default to dashboard
+               const redirectTarget = localStorage.getItem("oauth_redirect_to") || "/user/dashboard";
+               localStorage.removeItem("oauth_redirect_to");
 
                // Redirect after brief delay
                setTimeout(() => {
-                  router.push("/user/dashboard");
+                  router.push(redirectTarget);
                }, 1500);
             } else {
-               console.error("❌ Authentication verification failed");
+               console.error("❌ Authentication verification failed - No valid session");
+
                toast.error("Authentication Failed", {
                   id: toastId,
-                  description: "Backend created user but login verification failed. Try email login.",
+                  description: "Could not verify your login session. Please try again or use email login.",
                   duration: 5000,
                });
+
                clearOAuthParams();
-               setOauthLoading(null);
             }
          } catch (error) {
             console.error("❌ OAuth verification error:", error);
@@ -984,9 +992,9 @@ export default function LoginPage() {
                duration: 5000,
             });
             clearOAuthParams();
-            setOauthLoading(null);
          } finally {
             setIsVerifyingOAuth(false);
+            setOauthLoading(null);
          }
       };
 
@@ -996,13 +1004,16 @@ export default function LoginPage() {
    // Handle email login action state changes
    useEffect(() => {
       if (state.message) {
-         if (state?.success) {
+         if (state.success) {
             console.log("✅ Email login successful:", state.message);
             toast.success("Login Successful!", {
                description: state.message,
                duration: 2000,
             });
-            // Redirect happens automatically via server-side redirect()
+            // Redirect to dashboard
+            setTimeout(() => {
+               router.push("/user/dashboard");
+            }, 1500);
          } else {
             console.error("❌ Email login failed:", state.message);
             toast.error("Login Failed", {
@@ -1011,26 +1022,30 @@ export default function LoginPage() {
             });
          }
       }
-   }, [state.message, state.success]);
+   }, [state.message, state.success, router]);
 
    // ── Google Login Handler ───────────────────────────────────────────────────────
    const handleGoogleLogin = async () => {
+      if (oauthLoading || isPending || isVerifyingOAuth) return;
+
       try {
          setOauthLoading("google");
          console.log("🔵 Starting Google OAuth flow...");
 
-         // Redirect to backend OAuth endpoint
-         // Backend will handle authentication and set cookies
+         // Initiate OAuth login - this will redirect the page
          initiateOAuthLogin("google", "/user/dashboard");
 
-         // This will redirect, so code won't reach here normally
+         // Note: The page will redirect, so we won't reach here normally
+         // But in case redirect doesn't happen, reset loading after timeout
          setTimeout(() => {
-            setOauthLoading(null);
-            toast.error("Google Login", {
-               description: "Failed to initiate Google login. Please try again.",
-               duration: 4000,
-            });
-         }, 3000);
+            if (oauthLoading === "google") {
+               setOauthLoading(null);
+               toast.error("Redirect Timeout", {
+                  description: "Failed to initiate Google login. Please try again.",
+                  duration: 4000,
+               });
+            }
+         }, 5000);
       } catch (error) {
          console.error("❌ Google login error:", error);
          setOauthLoading(null);
@@ -1043,22 +1058,26 @@ export default function LoginPage() {
 
    // ── GitHub Login Handler ───────────────────────────────────────────────────────
    const handleGithubLogin = async () => {
+      if (oauthLoading || isPending || isVerifyingOAuth) return;
+
       try {
          setOauthLoading("github");
          console.log("⚫ Starting GitHub OAuth flow...");
 
-         // Redirect to backend OAuth endpoint
-         // Backend will handle authentication and set cookies
+         // Initiate OAuth login - this will redirect the page
          initiateOAuthLogin("github", "/user/dashboard");
 
-         // This will redirect, so code won't reach here normally
+         // Note: The page will redirect, so we won't reach here normally
+         // But in case redirect doesn't happen, reset loading after timeout
          setTimeout(() => {
-            setOauthLoading(null);
-            toast.error("GitHub Login", {
-               description: "Failed to initiate GitHub login. Please try again.",
-               duration: 4000,
-            });
-         }, 3000);
+            if (oauthLoading === "github") {
+               setOauthLoading(null);
+               toast.error("Redirect Timeout", {
+                  description: "Failed to initiate GitHub login. Please try again.",
+                  duration: 4000,
+               });
+            }
+         }, 5000);
       } catch (error) {
          console.error("❌ GitHub login error:", error);
          setOauthLoading(null);
@@ -1140,7 +1159,7 @@ export default function LoginPage() {
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                      </svg>
-                     {oauthLoading === "google" ? "Connecting…" : "Continue with Google"}
+                     {oauthLoading === "google" ? "Connecting to Google..." : "Continue with Google"}
                   </SocialBtn>
 
                   <SocialBtn onClick={handleGithubLogin} disabled={isLoading} isLoading={oauthLoading === "github"}>
@@ -1151,7 +1170,7 @@ export default function LoginPage() {
                            clipRule="evenodd"
                         />
                      </svg>
-                     {oauthLoading === "github" ? "Connecting…" : "Continue with GitHub"}
+                     {oauthLoading === "github" ? "Connecting to GitHub..." : "Continue with GitHub"}
                   </SocialBtn>
                </div>
 
@@ -1173,6 +1192,22 @@ export default function LoginPage() {
                         className="mb-5 px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] text-xs font-mono text-red-400/80"
                      >
                         {state.message}
+                     </motion.div>
+                  )}
+               </AnimatePresence>
+
+               {/* Verifying OAuth state indicator */}
+               <AnimatePresence>
+                  {isVerifyingOAuth && (
+                     <motion.div
+                        initial={{ opacity: 0, y: -8, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="mb-5 px-4 py-3 rounded-xl border border-blue-500/20 bg-blue-500/[0.06] text-xs font-mono text-blue-400/80 flex items-center gap-2"
+                     >
+                        <Loader2 size={14} className="animate-spin" />
+                        Verifying your login...
                      </motion.div>
                   )}
                </AnimatePresence>
@@ -1200,7 +1235,7 @@ export default function LoginPage() {
                      <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-white/30 mb-2">Password</label>
                      <div className="relative">
                         <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none z-10" />
-                        <PasswordField name="password" value={password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)} onBlur={() => {}} invalid={!!state.errors?.password} />
+                        <PasswordField name="password" value={password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)} onBlur={() => {}} invalid={!!state.errors?.password} disabled={isLoading} />
                      </div>
                      <AnimatePresence>
                         {state.errors?.password && (
@@ -1236,7 +1271,7 @@ export default function LoginPage() {
                      {isPending ? (
                         <>
                            <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                           Signing in…
+                           Signing in...
                         </>
                      ) : (
                         <>
