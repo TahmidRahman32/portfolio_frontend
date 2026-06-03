@@ -105,6 +105,12 @@ cd resumecv
 
 Visit `https://portfolio-frontend-jet-eight.vercel.app` in your browser.
 
+## 🌐 Live Demo
+
+- **Frontend:** [https://portfolio-frontend-jet-eight.vercel.app](https://portfolio-frontend-jet-eight.vercel.app) 
+- **GitHub Frontend:** [https://github.com/TahmidRahman32/portfolio_frontend](https://github.com/TahmidRahman32/portfolio_frontend)
+- **GitHub Backend:** [https://github.com/TahmidRahman32/portfolio_server](https://github.com/TahmidRahman32/portfolio_server)
+
 ---
 
 ## 📁 Project Structure

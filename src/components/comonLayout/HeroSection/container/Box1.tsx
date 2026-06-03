@@ -72,7 +72,7 @@ const Box1 = ({ socialLinks = defaultSocialLinks }: Footer7Props) => {
             aria-label="Contact Me"
             whileHover={{ scale: 1.2, rotate: 0 }}
             whileTap={{ scale: 0.95 }}
-            className="w-28 h-10 rounded-full bg-white/10 hover:bg-blue-100/20 border border-white/10 hover:border-blue-100/50 flex items-center justify-center text-gray-200 hover:text-blue-400 transition-all duration-300 absolute bottom-32 left-1/4 transform -translate-x-1/2 "
+            className="w-28 h-10 rounded-full bg-white/10 hover:bg-blue-100/20 border border-white/10 hover:border-blue-100/50 flex items-center justify-center text-gray-200 hover:text-blue-400 transition-all duration-300 lg:absolute bottom-22 lg:bottom-32 left-1/4 transform -translate-x-1/2 ml-[50%] lg:ml-0 "
          >
            Contact Me
          </motion.a>
