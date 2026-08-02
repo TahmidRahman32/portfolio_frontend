@@ -1,4 +1,3 @@
-
 import { MailIcon, SearchIcon } from "lucide-react";
 // import NotificationMenu from "@/components/notification-menu";
 // import UserMenu from "@/components/user-menu";
@@ -22,8 +21,8 @@ const teams = ["Acme Inc.", "coss.com", "Junon"];
 // Navigation links array to be used in both desktop and mobile menus
 
 export default async function Navbar() {
-  const userInfo = (await getUserInfo()) as UserInfo;
-  const accessToken = await getCookie("accessToken");
+   const userInfo = (await getUserInfo()) as UserInfo;
+   const accessToken = await getCookie("accessToken");
    return (
       <div className="container mx-auto ">
          <header className=" px-4 md:px-6 shadow container mx-auto md:rounded-full dark:bg-input fixed z-50 ">
@@ -59,7 +58,15 @@ export default async function Navbar() {
                   </div>
                   {/* User menu */}
                   {/* <UserMenu /> */}
-                 {accessToken ? <NavDropdownMenu userinfo={userInfo} /> : <Link href="/login"><Button variant="outline" size="lg">Login</Button></Link>}
+                  {accessToken ? (
+                     <NavDropdownMenu userinfo={userInfo} />
+                  ) : (
+                     <Link href="/login">
+                        <Button variant="outline" size="lg">
+                           Login
+                        </Button>
+                     </Link>
+                  )}
                </div>
             </div>
          </header>

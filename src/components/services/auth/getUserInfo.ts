@@ -64,7 +64,13 @@ import { cache } from "react";
 // import { UserInfo } from "@/Types/user.interfece";
 
 const getUserInfoUncached = async (): Promise<UserInfo | any> => {
-   let userInfo: UserInfo | any;
+   const fallbackUser = {
+      id: "",
+      name: "Unknown User",
+      email: "",
+      role: "USER",
+   };
+
    try {
       const response = await serverFetch.get("/auth/me", {
          credentials: "include",
@@ -74,7 +80,7 @@ const getUserInfoUncached = async (): Promise<UserInfo | any> => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result?.success) {
          const accessToken = await getCookie("accessToken");
 
          if (!accessToken) {
@@ -83,27 +89,20 @@ const getUserInfoUncached = async (): Promise<UserInfo | any> => {
 
          const verifiedToken = jwt.verify(accessToken, process.env.JWT_SECRET as string) as JwtPayload;
 
-         userInfo = {
+         return {
             name: verifiedToken.name || "Unknown User",
             email: verifiedToken.email,
             role: verifiedToken.role,
          };
       }
 
-      userInfo = {
-         name: result.data.admin?.name || result.data.user?.name || result.data.super_admin?.name || result.data.name || "Unknown User",
-         ...result.data,
+      return {
+         name: result?.data?.admin?.name || result?.data?.user?.name || result?.data?.super_admin?.name || result?.data?.name || "Unknown User",
+         ...(result?.data || {}),
       };
-
-      return userInfo;
    } catch (error: any) {
       console.log(error);
-      return {
-         id: "",
-         name: "Unknown User",
-         email: "",
-         role: "USER",
-      };
+      return fallbackUser;
    }
 };
 
