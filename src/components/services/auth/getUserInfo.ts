@@ -61,6 +61,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { getCookie } from "./tokenHandlers";
 import { UserInfo } from "@/Types/user.interfece";
 import { cache } from "react";
+import { authDiagnostic, authDiagnosticError } from "@/lib/auth-diagnostics";
 // import { UserInfo } from "@/Types/user.interfece";
 
 const getUserInfoUncached = async (): Promise<UserInfo | any> => {
@@ -72,12 +73,17 @@ const getUserInfoUncached = async (): Promise<UserInfo | any> => {
    };
 
    try {
+      authDiagnostic("frontend.auth_state.initialization", { stage: "request" });
       const response = await serverFetch.get("/auth/me", {
          credentials: "include",
          cache: "no-store",
       });
 
       const result = await response.json();
+      authDiagnostic("frontend.auth_state.response", {
+         status: response.status,
+         successful: result?.success === true,
+      });
 
       if (result?.success) {
          const accessToken = await getCookie("accessToken");
@@ -87,20 +93,27 @@ const getUserInfoUncached = async (): Promise<UserInfo | any> => {
          }
 
          const verifiedToken = jwt.verify(accessToken, process.env.JWT_SECRET as string) as JwtPayload;
+         const userData = result.data;
+         authDiagnostic("frontend.auth_state.initialization", {
+            stage: "authenticated",
+            profileNamePresent: typeof userData?.name === "string" && Boolean(userData.name),
+         });
 
          return {
-            name: verifiedToken.name || "Unknown User",
-            email: verifiedToken.email,
-            role: verifiedToken.role,
+            ...userData,
+            name: userData?.name || verifiedToken.name || "Unknown User",
+            email: userData?.email || verifiedToken.email || "",
+            role: userData?.role || verifiedToken.role || "USER",
          };
       }
 
+      authDiagnostic("frontend.auth_state.initialization", { stage: "unauthenticated" });
       return {
          name: result?.data?.admin?.name || result?.data?.user?.name || result?.data?.super_admin?.name || result?.data?.name || "Unknown User",
          ...(result?.data || {}),
       };
-   } catch (error: any) {
-      console.log(error);
+   } catch (error: unknown) {
+      authDiagnosticError("frontend.auth_state.initialization", error, { stage: "failed" });
       return fallbackUser;
    }
 };

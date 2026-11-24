@@ -1131,34 +1131,19 @@ import { toast } from "sonner";
 import { ResumeData, ResumeTemplate } from "@/Types/Resume";
 import { downloadResumePdf } from "@/utils/resumePdf";
 import { isResumeTemplate } from "@/utils/templates";
+import { formatDashboardDate } from "@/utils/dashboardDate";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-// ── Format date ────────────────────────────────────────────────────────────────
-function formatDate(dateString: string): string {
-   try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
-
-      if (diffHours < 24) return `${diffHours}h ago`;
-      if (diffDays < 7) return `${diffDays}d ago`;
-
-      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-   } catch {
-      return "recently";
-   }
-}
-
 // ── Transform resume data ──────────────────────────────────────────────────────
-function transformResume(resume: any) {
+type DashboardResume = ResumeData & { id: string; updatedAt?: string };
+type DashboardResumeResponse = { data?: DashboardResume[] };
+
+function transformResume(resume: DashboardResume, renderedAt: string) {
    return {
-      id: resume.id,
       name: resume.personalInfo?.fullName || "Untitled Resume",
       template: "Professional",
-      edited: formatDate(resume.updatedAt),
+      edited: formatDashboardDate(resume.updatedAt ?? "", renderedAt),
       pub: true,
       ...resume,
    };
@@ -1194,7 +1179,7 @@ const recTemplates = [
 ];
 
 // ── Main ───────────────────────────────────────────────────────────────────────
-export default function Dashboard({ myResumes }: { myResumes: any }) {
+export default function Dashboard({ myResumes, renderedAt }: { myResumes?: DashboardResumeResponse; renderedAt: string }) {
    const [activeTab, setActiveTab] = useState("overview");
    const [showResumeModal, setShowResumeModal] = useState(false);
    const [selectedResume, setSelectedResume] = useState<any>(null);
@@ -1203,7 +1188,7 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
    const mainRef = useRef<HTMLDivElement>(null);
    const inView = useInView(mainRef, { once: true, margin: "-40px" });
 
-   const resumes = myResumes?.data?.map(transformResume) || [];
+   const resumes = myResumes?.data?.map((resume) => transformResume(resume, renderedAt)) || [];
    const resumeCount = resumes.length;
    const storagePercent = Math.round((resumeCount / 10) * 100);
    // Handle modal open

@@ -4,12 +4,12 @@ import React from 'react';
 
 
 const UserDashboard = async () => {
-
    const myResume = await getMyResume();
+   const renderedAt = new Date().toISOString();
    // console.log("get my resume", myResume)
    return (
       <div>
-         <Dashboard  myResumes={myResume} />
+         <Dashboard myResumes={myResume} renderedAt={renderedAt} />
       </div>
    );
 };

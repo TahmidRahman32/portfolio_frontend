@@ -353,7 +353,9 @@ interface Resume {
 
 **Frontend**
 ```env
-NEXT_PUBLIC_API_URL           # Backend API URL
+NEXT_PUBLIC_BASE_API_URL      # Express API base URL; include /api/v1 or the API host
+JWT_SECRET                    # Must exactly match the backend JWT_SECRET; never use NEXT_PUBLIC_ prefix
+AUTH_DIAGNOSTICS              # Set to true temporarily for structured OAuth diagnostics
 NEXT_PUBLIC_APP_NAME          # Application name
 NEXT_PUBLIC_APP_DESCRIPTION   # App description
 ```
@@ -361,15 +363,24 @@ NEXT_PUBLIC_APP_DESCRIPTION   # App description
 **Backend**
 ```env
 DATABASE_URL                  # PostgreSQL connection
-JWT_SECRET                    # JWT signing secret
-JWT_EXPIRE                    # Token expiration
+FRONTEND_URL                  # Exact deployed frontend origin, e.g. https://your-app.vercel.app
+JWT_SECRET                    # JWT signing secret; must match the frontend value
+ACCESS_TOKEN_EXPIRES_IN       # Access token lifetime
+REFRESH_TOKEN_SECRET          # Refresh token signing secret
+REFRESH_TOKEN_EXPIRES_IN      # Refresh token lifetime
 PORT                          # Server port
 NODE_ENV                      # Environment mode
 GOOGLE_CLIENT_ID              # Google OAuth ID
 GOOGLE_CLIENT_SECRET          # Google OAuth secret
+GOOGLE_CALLBACK_URL           # https://your-api-host/api/v1/auth/google/callback
 GITHUB_CLIENT_ID              # GitHub OAuth ID
 GITHUB_CLIENT_SECRET          # GitHub OAuth secret
+AUTH_DIAGNOSTICS              # Set to true temporarily for structured OAuth diagnostics
 ```
+
+In Google Cloud Console, add the deployed frontend origin as an authorized JavaScript origin and set the authorized redirect URI to the exact backend `GOOGLE_CALLBACK_URL`. The backend start command runs `prisma migrate deploy` before starting Express, so production database migrations must be available to the deployment.
+
+Disable `AUTH_DIAGNOSTICS` after troubleshooting. Diagnostic events include outcome/status metadata only; they never log tokens, OAuth codes, email addresses, or secret values.
 
 ---
 

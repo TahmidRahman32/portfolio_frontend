@@ -70,6 +70,7 @@ import profilePhoto from "../../../public/image/account-profile-user-icon--icon-
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 
 interface NavDropdownMenuProps {
@@ -77,6 +78,7 @@ interface NavDropdownMenuProps {
 }
 
 const NavDropdownMenu = ({ userinfo }: NavDropdownMenuProps) => {
+   const router = useRouter();
    const [showLogoutModal, setShowLogoutModal] = useState(false);
    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -88,8 +90,7 @@ const NavDropdownMenu = ({ userinfo }: NavDropdownMenuProps) => {
       setIsLoggingOut(true);
       try {
          await logoutUser();
-         // Redirect or handle post-logout logic here
-         // window.location.href = '/login'; // Uncomment if needed
+         router.replace("/login?loggedOut=true");
       } catch (error) {
          console.error("Logout failed:", error);
       } finally {

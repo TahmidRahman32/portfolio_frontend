@@ -251,7 +251,7 @@ const AboutHeader = () => {
 
             {/* CTAs */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, ease, delay: 0.5 }} className="flex flex-col sm:flex-row gap-3">
-               <a href="/resume.pdf" download className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white text-black text-sm font-semibold tracking-tight hover:bg-white/90 transition-colors duration-200">
+               <a href="/image/Duis_magna_obcaecati_Resume.pdf" download className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white text-black text-sm font-semibold tracking-tight hover:bg-white/90 transition-colors duration-200">
                   <Download size={15} />
                   Download Resume
                </a>
