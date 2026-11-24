@@ -375,7 +375,7 @@ const ServicesHeader = () => {
    });
 
    return (
-      <motion.section ref={ref} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="relative w-full overflow-hidden bg-[#0A0A0A] border border-white/[0.06]">
+      <section ref={ref} className="relative w-full overflow-hidden bg-[#0A0A0A] border border-white/[0.06]">
          {/* ── Noise ── */}
          <div
             aria-hidden
@@ -523,7 +523,7 @@ const ServicesHeader = () => {
                <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif" }} className="text-2xl md:text-3xl font-normal text-white mb-3">
                   Ready to build something <span className="italic text-white/30">remarkable?</span>
                </h3>
-               <p className="text-sm font-mono text-white/30 mb-8 max-w-xl mx-auto">Let's discuss your project and bring your vision to life with modern web technologies.</p>
+               <p className="text-sm font-mono text-white/30 mb-8 max-w-xl mx-auto">Let&apos;s discuss your project and bring your vision to life with modern web technologies.</p>
                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Link href="/contact" className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors duration-200">
                      Get a Free Quote
@@ -538,7 +538,7 @@ const ServicesHeader = () => {
                </div>
             </motion.div>
          </div>
-      </motion.section>
+      </section>
    );
 };
 

@@ -457,7 +457,6 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { pdf } from "@react-pdf/renderer";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Download, ChevronLeft, ChevronRight, Layers, User, AlignLeft, GraduationCap, Briefcase, Zap, FolderOpen, ArrowLeft, Save, Trash2, RefreshCw, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -469,12 +468,12 @@ import WorkExperienceForm from "./WorkExperienceForm";
 import SkillsForm from "./SkillsForm";
 import ProjectsForm from "./ProjectsForm";
 import ResumePreview from "./ResumePreview";
-import ResumePDFDocument from "./ResumePDFDocument";
 import TemplateSelector from "./TemplateSelector";
 
-import { DEFAULT_TEMPLATE, TEMPLATES } from "@/utils/templates";
+import { DEFAULT_TEMPLATE, isResumeTemplate, TEMPLATES } from "@/utils/templates";
 import { ResumeData, PersonalInfo, Education, WorkExperience, Skill, Project, ResumeTemplate } from "@/Types/Resume";
 import { useResumeApi } from "./useResume";
+import { downloadResumePdf } from "@/utils/resumePdf";
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
 const defaultResumeData: ResumeData = {
@@ -625,11 +624,15 @@ export default function ResumeBuilder() {
                   website: savedAny.personalInfo?.website ?? prev.personalInfo.website,
                },
                summary: savedAny.summary ?? prev.summary,
+               template: savedAny.template ?? prev.template,
                education: savedAny.education?.length ? savedAny.education : prev.education,
                workExperience: savedAny.workExperience?.length ? savedAny.workExperience : prev.workExperience,
                skills: savedAny.skills?.length ? savedAny.skills : prev.skills,
                projects: savedAny.projects?.length ? savedAny.projects : prev.projects,
             }));
+            if (isResumeTemplate(savedAny.template)) {
+               setSelectedTemplate(savedAny.template);
+            }
          }
       })();
    }, []); // eslint-disable-line
@@ -673,17 +676,10 @@ export default function ResumeBuilder() {
       setIsGeneratingPDF(true);
       const tid = toast.loading("Generating PDF…", { description: "Building your resume document." });
       try {
-         const blob = await pdf(<ResumePDFDocument data={resumeData} template={selectedTemplate} />).toBlob();
-         const url = URL.createObjectURL(blob);
-         const a = document.createElement("a");
-         a.href = url;
-         a.download = `${resumeData.personalInfo.fullName.replace(/\s+/g, "_") || "resume"}_Resume.pdf`;
-         document.body.appendChild(a);
-         a.click();
-         document.body.removeChild(a);
-         URL.revokeObjectURL(url);
+         await downloadResumePdf(resumeData, selectedTemplate);
          toast.success("PDF downloaded!", { id: tid, description: "Your resume is ready.", duration: 3000 });
-      } catch {
+      } catch (error) {
+         console.error("Resume PDF generation failed", error);
          toast.error("PDF generation failed", { id: tid, description: "Please try again.", duration: 4000 });
          setErrors((p) => ({ ...p, pdf: "Failed to generate PDF. Please try again." }));
       } finally {

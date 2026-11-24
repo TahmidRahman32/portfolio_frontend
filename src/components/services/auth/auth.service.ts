@@ -246,27 +246,25 @@ export async function getNewAccessToken() {
          throw new Error("Tokens not found in cookies");
       }
 
-      if (!refreshTokenObject) {
-         throw new Error("Tokens not found in cookies");
-      }
-
       await deleteCookie("accessToken");
       await setCookie("accessToken", accessTokenObject.accessToken, {
-         secure: true,
+         secure: process.env.NODE_ENV === "production",
          httpOnly: true,
          maxAge: parseInt(accessTokenObject["Max-Age"]) || 7 * 24 * 60 * 60,
          path: accessTokenObject.Path || "/",
-         sameSite: accessTokenObject["SameSite"] || "none",
+         sameSite: "lax",
       });
 
-      await deleteCookie("refreshToken");
-      await setCookie("refreshToken", refreshTokenObject.refreshToken, {
-         secure: true,
-         httpOnly: true,
-         maxAge: parseInt(refreshTokenObject["Max-Age"]) || 1000 * 60 * 60 * 24 * 90,
-         path: refreshTokenObject.Path || "/",
-         sameSite: refreshTokenObject["SameSite"] || "none",
-      });
+      if (refreshTokenObject) {
+         await deleteCookie("refreshToken");
+         await setCookie("refreshToken", refreshTokenObject.refreshToken, {
+            secure: process.env.NODE_ENV === "production",
+            httpOnly: true,
+            maxAge: parseInt(refreshTokenObject["Max-Age"]) || 1000 * 60 * 60 * 24 * 90,
+            path: refreshTokenObject.Path || "/",
+            sameSite: "lax",
+         });
+      }
 
       if (!result.success) {
          throw new Error(result.message || "Token refresh failed");

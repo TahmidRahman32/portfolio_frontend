@@ -1,75 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const ACCENT_FROM = "#bd9520";
 const ACCENT_TO = "#f59e0b";
 const FILL_DURATION = 1800;
-const EXIT_DELAY = 300;
-const EXIT_DURATION = 500;
-
 const KICKER = "Portfolio";
 const DISPLAY_NAME = "Tahmid";
 const ROLE = "Full-Stack Developer";
-const CAPTION = "Loading";
+const CAPTION = "Loading...";
 
 export default function GlobalLoader() {
    const [started, setStarted] = useState(false);
-   const [isExiting, setIsExiting] = useState(false);
-   const [isVisible, setIsVisible] = useState(true);
    const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-   const startRafRef = useRef<number | null>(null);
-   const exitTimeoutRef = useRef<number | null>(null);
-   const hideTimeoutRef = useRef<number | null>(null);
 
    useEffect(() => {
       const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-      const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+      const updatePreference = () => {
+         setPrefersReducedMotion(mediaQuery.matches);
+         if (mediaQuery.matches) setStarted(true);
+      };
 
       updatePreference();
       mediaQuery.addEventListener("change", updatePreference);
-
-      return () => mediaQuery.removeEventListener("change", updatePreference);
-   }, []);
-
-   useEffect(() => {
-      document.body.style.overflow = "hidden";
-
-      if (prefersReducedMotion) {
-         setStarted(true);
-         exitTimeoutRef.current = window.setTimeout(() => setIsExiting(true), EXIT_DELAY);
-         hideTimeoutRef.current = window.setTimeout(() => {
-            setIsVisible(false);
-            document.body.style.overflow = "";
-         }, EXIT_DELAY + EXIT_DURATION);
-
-         return () => {
-            if (exitTimeoutRef.current) window.clearTimeout(exitTimeoutRef.current);
-            if (hideTimeoutRef.current) window.clearTimeout(hideTimeoutRef.current);
-            document.body.style.overflow = "";
-         };
-      }
-
-      startRafRef.current = window.requestAnimationFrame(() => setStarted(true));
-
-      exitTimeoutRef.current = window.setTimeout(() => setIsExiting(true), FILL_DURATION + EXIT_DELAY);
-      hideTimeoutRef.current = window.setTimeout(
-         () => {
-            setIsVisible(false);
-            document.body.style.overflow = "";
-         },
-         FILL_DURATION + EXIT_DELAY + EXIT_DURATION,
-      );
+      const startRaf = window.requestAnimationFrame(() => setStarted(true));
 
       return () => {
-         if (startRafRef.current) window.cancelAnimationFrame(startRafRef.current);
-         if (exitTimeoutRef.current) window.clearTimeout(exitTimeoutRef.current);
-         if (hideTimeoutRef.current) window.clearTimeout(hideTimeoutRef.current);
-         document.body.style.overflow = "";
+         window.cancelAnimationFrame(startRaf);
+         mediaQuery.removeEventListener("change", updatePreference);
       };
-   }, [prefersReducedMotion]);
-
-   if (!isVisible) return null;
+   }, []);
 
    return (
       <div
@@ -81,10 +41,6 @@ export default function GlobalLoader() {
             zIndex: 100,
             background: "radial-gradient(circle at top, rgba(189, 149, 32, 0.2), transparent 35%), #06070a",
             color: "#f7f4ee",
-            opacity: isExiting ? 0 : 1,
-            transform: isExiting ? "scale(1.03)" : "scale(1)",
-            filter: isExiting ? "blur(10px)" : "blur(0px)",
-            transition: `opacity ${EXIT_DURATION}ms ease, transform ${EXIT_DURATION}ms ease, filter ${EXIT_DURATION}ms ease`,
          }}
       >
          <div
@@ -153,9 +109,10 @@ export default function GlobalLoader() {
                <span className="h-2 w-px bg-white/25" />
             </div>
 
-            <span className="reveal-item font-mono text-[10px] uppercase tracking-[0.5em] text-white/30" style={{ animationDelay: "480ms" }}>
-               {CAPTION}
-            </span>
+            <div className="reveal-item flex items-center gap-3" style={{ animationDelay: "480ms" }}>
+               <span aria-hidden="true" className="h-3.5 w-3.5 animate-spin rounded-full border border-white/20 border-t-amber-400" />
+               <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-white/30">{CAPTION}</span>
+            </div>
          </div>
 
          <style jsx>{`

@@ -56,14 +56,18 @@ export interface Certification {
    title: string;
    issuer: string;
    issueDate: string;
+   date?: string;
    expiryDate?: string;
    credentialId?: string;
    credentialUrl?: string;
+   link?: string;
 }
 
 export interface ResumeData {
+   id?: string;
    personalInfo: PersonalInfo;
    summary: string;
+   template?: ResumeTemplate;
    education: Education[];
    workExperience: WorkExperience[];
    skills: Skill[];
@@ -81,7 +85,7 @@ export interface TemplateConfig {
    preview: string;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
    success: boolean;
    message: string;
    code?: string;

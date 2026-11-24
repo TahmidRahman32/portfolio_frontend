@@ -157,8 +157,8 @@ resumecv/
 1. User signs up with email and password
 2. Backend validates and hashes password
 3. User created in database
-4. JWT token generated and returned
-5. Token stored in secure HTTP-only cookie
+4. JWT tokens generated
+5. Tokens stored in secure HTTP-only cookies
 6. Subsequent requests include token for authentication
 
 ```typescript
@@ -185,9 +185,9 @@ POST /api/v1/auth/login
 4. Provider redirects back with authorization code
 5. Backend exchanges code for access token
 6. Backend creates/updates user
-7. Backend sets authentication cookies
-8. Frontend verifies authentication
-9. User redirected to dashboard
+7. Backend creates a short-lived, single-use OAuth handoff code
+8. The frontend callback exchanges the code server-side and sets HTTP-only cookies
+9. User is redirected to the requested dashboard route
 
 ---
 
@@ -200,6 +200,7 @@ POST   /api/v1/auth/login         - Login user
 GET    /api/v1/auth/logout        - Logout user
 GET    /api/v1/auth/google        - Google OAuth
 GET    /api/v1/auth/github        - GitHub OAuth
+POST   /api/v1/auth/oauth/exchange - Exchange a one-time OAuth callback code
 GET    /api/v1/auth/me            - Get current user
 ```
 
@@ -207,10 +208,10 @@ GET    /api/v1/auth/me            - Get current user
 ```
 POST   /api/v1/resume/create      - Create new resume
 GET    /api/v1/resume             - Get user's resume
+GET    /api/v1/resume/my          - Get current user's resume list
 GET    /api/v1/resume/all         - Get all resumes
 PUT    /api/v1/resume             - Update resume
 DELETE /api/v1/resume             - Delete resume
-GET    /api/v1/resume/:id         - Get specific resume
 ```
 
 ### User Profile

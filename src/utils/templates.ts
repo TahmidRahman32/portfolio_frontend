@@ -37,3 +37,7 @@ export const TEMPLATES: Record<ResumeTemplate, TemplateConfig> = {
 };
 
 export const DEFAULT_TEMPLATE: ResumeTemplate = "modern";
+
+export function isResumeTemplate(value: unknown): value is ResumeTemplate {
+   return typeof value === "string" && Object.prototype.hasOwnProperty.call(TEMPLATES, value);
+}

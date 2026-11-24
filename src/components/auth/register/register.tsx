@@ -1230,7 +1230,7 @@ export default function RegisterPage() {
           } else {
             router.push("/login");
           }
-        }, 2000);
+        }, router ? 5000 : 0)
       } else {
         toast.error(state.message);
       }

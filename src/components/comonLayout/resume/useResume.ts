@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { createResume, fetchResume, deleteResumeData, ResumeData as ApiResumeData } from "./resumeActions";
+import { createResume, fetchResume, deleteResumeData, updateResume } from "./resumeActions";
+import type { EducationEntry, ResumeData as ApiResumeData, WorkExperienceEntry } from "./resumeActions";
 // import { createResume, fetchResume, deleteResumeData, ResumeData as ApiResumeData } from "@/app/actions/resumeActions";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -18,7 +19,7 @@ export interface UseResumeApiReturn {
    deleteResume: () => Promise<boolean>;
 }
 
-const formatDateToFull = (dateStr: string): string => {
+const formatDateToFull = (dateStr: string | undefined): string => {
    if (!dateStr) return "";
    // Convert YYYY-MM to YYYY-MM-DD
    if (dateStr.match(/^\d{4}-\d{2}$/)) {
@@ -32,6 +33,8 @@ export function useResumeApi(): UseResumeApiReturn {
    const [apiStatus, setApiStatus] = useState<ApiStatus>("idle");
    const [lastSaved, setLastSaved] = useState<Date | null>(null);
    const [hasSaved, setHasSaved] = useState(false);
+   const hasSavedRef = useRef(false);
+   const saveResumeRef = useRef<(data: ApiResumeData) => Promise<boolean>>(async () => false);
    const toastIdRef = useRef<string | number | null>(null);
 
    // ── Save ───────────────────────────────────────────────────────────────────
@@ -50,22 +53,24 @@ export function useResumeApi(): UseResumeApiReturn {
          const formattedData = {
             ...data,
             education:
-               data.education?.map((edu: any) => ({
+               data.education?.map((edu: EducationEntry) => ({
                   ...edu,
                   startDate: formatDateToFull(edu.startDate),
                   endDate: formatDateToFull(edu.endDate),
                })) || [],
             workExperience:
-               data.workExperience?.map((exp: any) => ({
+               data.workExperience?.map((exp: WorkExperienceEntry) => ({
                   ...exp,
                   startDate: formatDateToFull(exp.startDate),
                   endDate: formatDateToFull(exp.endDate),
                })) || [],
          };
          // console.log("📝 Formatted data:", formattedData);
-         const result = await createResume(formattedData);
+         const result = hasSavedRef.current ? await updateResume(formattedData) : await createResume(formattedData);
          // console.log(result, "save resume");
          if (result.success) {
+            hasSavedRef.current = true;
+            setHasSaved(true);
             setApiStatus("saved");
             setLastSaved(new Date());
             setHasSaved(true);
@@ -86,12 +91,12 @@ export function useResumeApi(): UseResumeApiReturn {
                id: toastIdRef.current,
                description: msg,
                duration: 5000,
-               action: result.code === "NO_TOKEN" ? { label: "Login", onClick: () => (window.location.href = "/login") } : { label: "Retry", onClick: () => saveResume(data) },
+               action: result.code === "NO_TOKEN" ? { label: "Login", onClick: () => (window.location.href = "/login") } : { label: "Retry", onClick: () => void saveResumeRef.current(data) },
             });
 
             return false;
          }
-      } catch (err) {
+      } catch {
          setApiStatus("error");
          toast.error("Something went wrong", {
             id: toastIdRef.current,
@@ -102,6 +107,10 @@ export function useResumeApi(): UseResumeApiReturn {
       }
    }, []);
 
+   useEffect(() => {
+      saveResumeRef.current = saveResume;
+   }, [saveResume]);
+
    // ── Load ───────────────────────────────────────────────────────────────────
    const loadResume = useCallback(async (): Promise<ApiResumeData | null> => {
       setApiStatus("loading");
@@ -109,9 +118,10 @@ export function useResumeApi(): UseResumeApiReturn {
 
       try {
          const result = await fetchResume();
-         console.log(result, "resume actions");
 
          if (result.success && result.data) {
+            hasSavedRef.current = true;
+            setHasSaved(true);
             setApiStatus("idle");
             toast.success("Resume loaded", {
                id: loadToast,
@@ -123,6 +133,8 @@ export function useResumeApi(): UseResumeApiReturn {
             setApiStatus("idle");
 
             if (result.code === "NOT_FOUND") {
+               hasSavedRef.current = false;
+               setHasSaved(false);
                toast.info("No saved resume found", {
                   id: loadToast,
                   description: "Start filling in your details to create one.",
@@ -162,6 +174,7 @@ export function useResumeApi(): UseResumeApiReturn {
          const result = await deleteResumeData();
 
          if (result.success) {
+            hasSavedRef.current = false;
             setLastSaved(null);
             setHasSaved(false);
             setApiStatus("idle");

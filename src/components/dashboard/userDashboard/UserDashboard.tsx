@@ -1121,13 +1121,16 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { FileText, Eye, Download, Layers, BarChart2, Settings, Home, Bell, Plus, ChevronRight, Pencil, RefreshCw } from "lucide-react";
 import { ArrowLeft } from "lucide-react";
 import ResumeModal from "./Resumemodal";
-import { useResumeApi } from "@/components/comonLayout/resume/useResume";
+import { toast } from "sonner";
+import { ResumeData, ResumeTemplate } from "@/Types/Resume";
+import { downloadResumePdf } from "@/utils/resumePdf";
+import { isResumeTemplate } from "@/utils/templates";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -1190,24 +1193,12 @@ const recTemplates = [
    { name: "Creative", id: "creative", used: false, emoji: "◆", description: "Unique and bold design" },
 ];
 
-// ── Skeleton ───────────────────────────────────────────────────────────────────
-function Skeleton() {
-   return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-         <div className="text-center space-y-3">
-            <div className="w-10 h-10 border border-white/10 border-t-white/30 rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-mono text-white/20">Loading dashboard…</p>
-         </div>
-      </div>
-   );
-}
-
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function Dashboard({ myResumes }: { myResumes: any }) {
    const [activeTab, setActiveTab] = useState("overview");
-   const [loading, setLoading] = useState(true);
    const [showResumeModal, setShowResumeModal] = useState(false);
    const [selectedResume, setSelectedResume] = useState<any>(null);
+   const [downloadingResumeId, setDownloadingResumeId] = useState<string | null>(null);
 
    const mainRef = useRef<HTMLDivElement>(null);
    const inView = useInView(mainRef, { once: true, margin: "-40px" });
@@ -1215,8 +1206,6 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
    const resumes = myResumes?.data?.map(transformResume) || [];
    const resumeCount = resumes.length;
    const storagePercent = Math.round((resumeCount / 10) * 100);
-   const { loadResume } = useResumeApi();
-
    // Handle modal open
    const handleOpenModal = (resume: any) => {
       setSelectedResume(resume);
@@ -1229,18 +1218,27 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
       setSelectedResume(null);
    };
 
-   useEffect(() => {
-      const t = setTimeout(() => setLoading(false), 900);
-      return () => clearTimeout(t);
-   }, []);
+   const handleDownloadResume = async (resume: ResumeData) => {
+      if (downloadingResumeId) return;
 
-   useEffect(() => {
-      (async () => {
-         await loadResume();
-      })();
-   }, []); // eslint-disable-line
+      const resumeId = resume.id || "current";
+      const toastId = toast.loading("Generating PDF…");
+      setDownloadingResumeId(resumeId);
 
-   if (loading) return <Skeleton />;
+      try {
+         const template: ResumeTemplate = isResumeTemplate(resume.template) ? resume.template : "professional";
+         await downloadResumePdf(resume, template);
+         toast.success("Resume downloaded", { id: toastId });
+      } catch (error) {
+         console.error("Resume PDF download failed", error);
+         toast.error("Resume download failed", {
+            id: toastId,
+            description: "Please try again.",
+         });
+      } finally {
+         setDownloadingResumeId(null);
+      }
+   };
 
    return (
       <div className="min-h-screen bg-[#080808]">
@@ -1368,12 +1366,12 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                   <motion.div initial={{ opacity: 1, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.65, ease, delay: 0.38 }} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm p-6">
                      <div className="flex items-center justify-between mb-5">
                         <p className="text-xs font-mono uppercase tracking-[0.18em] text-white/30">Recent Resumes {resumeCount > 0 && <span className="text-white/20">({resumeCount})</span>}</p>
-                        <button
-                           onClick={() => loadResume()}
+                        <Link
+                           href="/resume"
                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] text-white/35 text-xs font-mono uppercase tracking-widest hover:border-white/20 hover:text-white/55 transition-all duration-200"
                         >
-                           <RefreshCw size={12} /> Load Resumes
-                        </button>
+                           <RefreshCw size={12} /> Open Builder
+                        </Link>
                      </div>
 
                      {resumes.length === 0 ? (
@@ -1412,10 +1410,13 @@ export default function Dashboard({ myResumes }: { myResumes: any }) {
                                     </button>
 
                                     <button
+                                       onClick={() => handleDownloadResume(r)}
+                                       disabled={downloadingResumeId !== null}
                                        className="w-8 h-8 rounded-lg border border-white/[0.06] bg-white/[0.02] flex items-center justify-center text-white/20 hover:text-white/50 hover:border-white/15 transition-all duration-150 cursor-pointer"
                                        title="Download Resume"
+                                       aria-label={`Download ${r.name}`}
                                     >
-                                       <Download size={13} />
+                                       <Download size={13} className={downloadingResumeId === r.id ? "animate-pulse" : undefined} />
                                     </button>
 
                                     {/* <Link

@@ -836,7 +836,7 @@
 "use client";
 
 import React, {
-  useState, useRef, useLayoutEffect, useCallback, useMemo,
+  useState, useRef, useLayoutEffect, useEffect, useCallback, useMemo,
 } from "react";
 import { gsap } from "gsap";
 import { useRouter, usePathname } from "next/navigation";
@@ -878,6 +878,24 @@ const SparkleNavbar: React.FC<SparkleNavbarProps> = ({
   const glowRef       = useRef<HTMLDivElement>(null);  // hover glow pill
   const buttonRefs    = useRef<(HTMLButtonElement | null)[]>([]);
   const isAnimating   = useRef(false);
+  const clickTimelineRef = useRef<gsap.core.Timeline | null>(null);
+
+  const prefetchableRoutes = useMemo(
+    () => [...new Set(routes.filter((route) => route === "/" || route === "/about" || route === "/services"))],
+    [routes],
+  );
+
+  useEffect(() => {
+    const animatedElements = [underlineRef.current, hoverLineRef.current, glowRef.current, ...buttonRefs.current].filter(
+      (element): element is HTMLDivElement | HTMLButtonElement => element !== null,
+    );
+    prefetchableRoutes.forEach((route) => router.prefetch(route));
+
+    return () => {
+      clickTimelineRef.current?.kill();
+      gsap.killTweensOf(animatedElements);
+    };
+  }, [prefetchableRoutes, router]);
 
   // ── Sync on pathname change ─────────────────────────────────────────────────
   useLayoutEffect(() => {
@@ -941,7 +959,8 @@ const SparkleNavbar: React.FC<SparkleNavbarProps> = ({
     });
 
     // Briefly thicken the underline during travel
-    gsap.timeline()
+    clickTimelineRef.current?.kill();
+    clickTimelineRef.current = gsap.timeline()
       .to(ul, { height: 2.5, duration: 0.18, ease: "power2.out" })
       .to(ul, { height: 1,   duration: 0.22, ease: "power2.in" });
 

@@ -1,7 +1,6 @@
 import { getNewAccessToken } from "@/components/services/auth/auth.service";
 import { getCookie } from "@/components/services/auth/tokenHandlers";
-
-const BACKEND_API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
+import { BACKEND_API_URL } from "@/lib/api-url";
 
 const createUnavailableResponse = (message: string) =>
    new Response(JSON.stringify({ success: false, message, data: null }), {
@@ -12,38 +11,35 @@ const createUnavailableResponse = (message: string) =>
 // /auth/login
 const serverFetchHelper = async (endpoint: string, options: RequestInit): Promise<Response> => {
    const { headers, ...restOptions } = options;
-   const accessToken = await getCookie("accessToken");
 
-   // to stop recursion loop
-   if (endpoint !== "/auth/refresh-token") {
-      try {
-         await getNewAccessToken();
-      } catch {
-         // Ignore refresh failures and fall back to the main request
-      }
+   if (endpoint !== "/auth/refresh-token" && endpoint !== "/auth/login" && endpoint !== "/auth/oauth/exchange") {
+      await getNewAccessToken();
    }
 
+   const accessToken = await getCookie("accessToken");
+   const requestHeaders = new Headers(headers);
+   if (accessToken) {
+      if (!requestHeaders.has("Cookie")) requestHeaders.set("Cookie", `accessToken=${accessToken}`);
+      if (!requestHeaders.has("Authorization")) requestHeaders.set("Authorization", `Bearer ${accessToken}`);
+   }
    const controller = new AbortController();
    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
    try {
       const response = await fetch(`${BACKEND_API_URL}${endpoint}`, {
-         headers: {
-            Cookie: accessToken ? `accessToken=${accessToken}` : "",
-            ...headers,
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-         },
          ...restOptions,
+         headers: requestHeaders,
          signal: controller.signal,
       });
 
       return response;
-   } catch (error: any) {
-      if (error?.name !== "AbortError") {
-         console.warn(`[serverFetch] ${endpoint} failed:`, error?.message || error);
+   } catch (error: unknown) {
+      const isAbortError = error instanceof Error && error.name === "AbortError";
+      if (!isAbortError) {
+         console.warn(`[serverFetch] ${endpoint} failed:`, error instanceof Error ? error.message : error);
       }
 
-      return createUnavailableResponse(error?.name === "AbortError" ? "Backend request timed out" : "Backend unavailable");
+      return createUnavailableResponse(isAbortError ? "Backend request timed out" : "Backend unavailable");
    } finally {
       clearTimeout(timeoutId);
    }

@@ -62,20 +62,22 @@ export const loginUser = async (_currentState: any, formData: any): Promise<any>
          throw new Error("Tokens not found in cookies");
       }
 
+      const isProduction = process.env.NODE_ENV === "production";
+
       await setCookie("accessToken", accessTokenObject.accessToken, {
-         secure: true,
+         secure: isProduction,
          httpOnly: true,
          maxAge: parseInt(accessTokenObject["Max-Age"]) || 7 * 24 * 60 * 60,
          path: accessTokenObject.Path || "/",
-         sameSite: accessTokenObject["SameSite"] || "none",
+         sameSite: "lax",
       });
 
       await setCookie("refreshToken", refreshTokenObject.refreshToken, {
-         secure: true,
+         secure: isProduction,
          httpOnly: true,
          maxAge: parseInt(refreshTokenObject["Max-Age"]) || 7 * 24 * 60 * 60 * 90,
          path: refreshTokenObject.Path || "/",
-         sameSite: refreshTokenObject["SameSite"] || "none",
+         sameSite: "lax",
       });
       const verifiedToken: JwtPayload | string = jwt.verify(accessTokenObject.accessToken, process.env.JWT_SECRET as string);
 

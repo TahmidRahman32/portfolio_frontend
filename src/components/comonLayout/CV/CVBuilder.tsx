@@ -444,6 +444,50 @@ const sections = [
    { id: "experience", label: "Experience", icon: Briefcase },
    { id: "skills", label: "Skills", icon: Zap },
 ];
+const A4_WIDTH_PX = Math.ceil((210 * 96) / 25.4);
+
+const modernColorFunction = /\b(?:oklch|oklab|lch|lab|color)\(/gi;
+
+function normalizeModernColors(value: string, context: CanvasRenderingContext2D): string {
+   let result = "";
+   let lastIndex = 0;
+   modernColorFunction.lastIndex = 0;
+   let match = modernColorFunction.exec(value);
+
+   while (match) {
+      const start = match.index;
+      const openParen = start + match[0].length - 1;
+      let depth = 1;
+      let end = openParen + 1;
+
+      while (end < value.length && depth > 0) {
+         if (value[end] === "(") depth += 1;
+         if (value[end] === ")") depth -= 1;
+         end += 1;
+      }
+
+      if (depth !== 0) break;
+
+      const color = value.slice(start, end);
+      context.fillStyle = "#010203";
+      const sentinel = context.fillStyle;
+      context.fillStyle = color;
+      if (context.fillStyle === sentinel) {
+         result += value.slice(lastIndex, end);
+      } else {
+         context.clearRect(0, 0, 1, 1);
+         context.fillRect(0, 0, 1, 1);
+         const [red, green, blue, alpha] = context.getImageData(0, 0, 1, 1).data;
+         result += `${value.slice(lastIndex, start)}rgba(${red}, ${green}, ${blue}, ${alpha / 255})`;
+      }
+
+      lastIndex = end;
+      modernColorFunction.lastIndex = end;
+      match = modernColorFunction.exec(value);
+   }
+
+   return result + value.slice(lastIndex);
+}
 
 export default function CVBuilder() {
    const [cvData, setCVData] = useState<CVData>(defaultCVData);
@@ -486,18 +530,79 @@ export default function CVBuilder() {
       try {
          const html2canvas = (await import("html2canvas")).default;
          const jsPDF = (await import("jspdf")).default;
-         const el = document.querySelector(".preview-panel") as HTMLElement;
+         const el = document.querySelector<HTMLElement>(".preview-panel .cv-container");
          if (!el) throw new Error("Preview not found");
-         const canvas = await html2canvas(el, { scale: 2, useCORS: true, logging: false, backgroundColor: "#ffffff" });
+
+         await document.fonts.ready;
+         const canvas = await html2canvas(el, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: "#ffffff",
+            windowWidth: Math.max(el.scrollWidth, A4_WIDTH_PX),
+            windowHeight: el.scrollHeight,
+            onclone: (clonedDocument) => {
+               const clonedPreview = clonedDocument.querySelector<HTMLElement>(".cv-container");
+               const clonedRoot = clonedDocument.documentElement;
+               const clonedBody = clonedDocument.body;
+               const clonedWindow = clonedDocument.defaultView;
+               const colorContext = clonedDocument.createElement("canvas").getContext("2d", { willReadFrequently: true });
+               if (!clonedPreview || !clonedRoot || !clonedBody || !clonedWindow || !colorContext) {
+                  throw new Error("Could not prepare the CV preview for PDF export");
+               }
+
+               clonedRoot.style.setProperty("background-color", "#ffffff", "important");
+               clonedBody.style.setProperty("background-color", "#ffffff", "important");
+               clonedPreview.style.setProperty("width", "210mm", "important");
+               clonedPreview.style.setProperty("min-width", "210mm", "important");
+               clonedPreview.style.setProperty("max-width", "210mm", "important");
+               clonedPreview.style.setProperty("box-sizing", "border-box", "important");
+
+               const elements: (HTMLElement | SVGElement)[] = [clonedPreview, ...Array.from(clonedPreview.querySelectorAll<HTMLElement | SVGElement>("*"))];
+               for (const element of elements) {
+                  const styles = clonedWindow.getComputedStyle(element);
+                  for (let index = 0; index < styles.length; index += 1) {
+                     const property = styles.item(index);
+                     if (!property) continue;
+
+                     const value = styles.getPropertyValue(property);
+                     if (/\b(?:oklch|oklab|lch|lab|color)\(/i.test(value)) {
+                        element.style.setProperty(property, normalizeModernColors(value, colorContext), "important");
+                     }
+                  }
+               }
+            },
+         });
          const pdf = new jsPDF("p", "mm", "a4");
-         const pw = pdf.internal.pageSize.getWidth(),
-            ph = pdf.internal.pageSize.getHeight();
-         const ratio = Math.min(pw / canvas.width, ph / canvas.height);
-         pdf.addImage(canvas.toDataURL("image/png"), "PNG", (pw - canvas.width * ratio) / 2, 0, canvas.width * ratio, canvas.height * ratio);
-         pdf.save(`${cvData.personalInfo.fullName.replace(/\s+/g, "_") || "my"}_CV.pdf`);
+         const pageWidth = pdf.internal.pageSize.getWidth();
+         const pageHeight = pdf.internal.pageSize.getHeight();
+         const margin = 10;
+         const contentWidth = pageWidth - margin * 2;
+         const contentHeight = pageHeight - margin * 2;
+         const sliceHeight = Math.max(1, Math.floor((contentHeight * canvas.width) / contentWidth));
+         const pageCount = Math.ceil(canvas.height / sliceHeight);
+
+         for (let page = 0; page < pageCount; page += 1) {
+            if (page > 0) pdf.addPage();
+
+            const sourceY = page * sliceHeight;
+            const currentSliceHeight = Math.min(sliceHeight, canvas.height - sourceY);
+            const pageCanvas = document.createElement("canvas");
+            pageCanvas.width = canvas.width;
+            pageCanvas.height = currentSliceHeight;
+            const context = pageCanvas.getContext("2d");
+            if (!context) throw new Error("Could not prepare a PDF page");
+
+            context.drawImage(canvas, 0, sourceY, canvas.width, currentSliceHeight, 0, 0, canvas.width, currentSliceHeight);
+            pdf.addImage(pageCanvas.toDataURL("image/jpeg", 0.95), "JPEG", margin, margin, contentWidth, (currentSliceHeight * contentWidth) / canvas.width);
+         }
+
+         const filename = cvData.personalInfo.fullName.trim().replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_").replace(/\s+/g, "_") || "my";
+         pdf.save(`${filename}_CV.pdf`);
          toast.success("PDF downloaded!");
-      } catch {
-         toast.error("Failed. Try again.");
+      } catch (error) {
+         console.error("CV PDF generation failed", error);
+         toast.error("PDF download failed", { description: "Please try again." });
       } finally {
          setIsGeneratingPDF(false);
       }

@@ -181,7 +181,7 @@ const AboutHeader = () => {
    const inView = useInView(ref, { once: true, margin: "-60px" });
 
    return (
-      <motion.section ref={ref} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="relative w-full overflow-hidden bg-[#0A0A0A] border border-white/[0.06] ">
+      <section ref={ref} className="relative w-full overflow-hidden bg-[#0A0A0A] border border-white/[0.06] ">
          {/* Noise */}
          <div
             aria-hidden
@@ -270,7 +270,7 @@ const AboutHeader = () => {
                <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }} className="w-px h-6 bg-gradient-to-b from-white/20 to-transparent" />
             </motion.div>
          </div>
-      </motion.section>
+      </section>
    );
 };
 

@@ -2,7 +2,7 @@
 "use client";
 
 import { ResumeData, ResumeTemplate } from "@/Types/Resume";
-import { Page, Text, View, Document, StyleSheet, Link, Font } from "@react-pdf/renderer";
+import { Page, Text, View, Document, StyleSheet, Link } from "@react-pdf/renderer";
 // import { ResumeData, ResumeTemplate } from "../type/Resume";
 
 
@@ -15,94 +15,6 @@ import { Page, Text, View, Document, StyleSheet, Link, Font } from "@react-pdf/r
 // components/resume/ResumePDFDocument.tsx
 
 
-
-// Register fonts
-const styles = StyleSheet.create({
-   page: {
-      flexDirection: "column",
-      backgroundColor: "#FFFFFF",
-      padding: 30,
-      fontFamily: "Helvetica",
-   },
-   section: {
-      marginBottom: 15,
-   },
-   header: {
-      fontSize: 24,
-      marginBottom: 10,
-      textAlign: "center",
-      fontWeight: "bold",
-      color: "#2c3e50",
-   },
-   subheader: {
-      fontSize: 16,
-      marginBottom: 8,
-      fontWeight: "bold",
-      color: "#2c3e50",
-      borderBottom: "1pt solid #bdc3c7",
-      paddingBottom: 3,
-   },
-   text: {
-      fontSize: 12,
-      marginBottom: 5,
-      color: "#000000",
-      lineHeight: 1.4,
-   },
-   bold: {
-      fontWeight: "bold",
-   },
-   italic: {
-      fontStyle: "italic",
-   },
-   row: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 5,
-      alignItems: "flex-start",
-   },
-   contactInfo: {
-      fontSize: 11,
-      marginBottom: 8,
-      textAlign: "center",
-      color: "#666666",
-      lineHeight: 1.5,
-   },
-   link: {
-      fontSize: 11,
-      color: "#3498db",
-      textDecoration: "none",
-   },
-   skillTag: {
-      backgroundColor: "#ecf0f1",
-      padding: "3px 8px",
-      margin: "2px",
-      borderRadius: 3,
-      fontSize: 10,
-      color: "#000000",
-   },
-   projectTech: {
-      backgroundColor: "#d6eaf8",
-      padding: "2px 6px",
-      margin: "1px",
-      borderRadius: 2,
-      fontSize: 9,
-      color: "#2c3e50",
-   },
-   list: {
-      marginLeft: 10,
-      marginTop: 5,
-   },
-   listItem: {
-      fontSize: 11,
-      marginBottom: 3,
-      lineHeight: 1.4,
-   },
-});
-
-Font.register({
-  family: 'Helvetica-Bold',
-  src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf',
-});
 
 // Template-specific styles
 const getTemplateStyles = (template: ResumeTemplate) => {
@@ -188,7 +100,6 @@ const createStyles = (template: ResumeTemplate) => {
     },
     bold: {
       fontWeight: 'bold',
-      fontFamily: 'Helvetica-Bold',
     },
     italic: {
       fontStyle: 'italic',
@@ -257,8 +168,6 @@ const formatDate = (dateString: string): string => {
 // Create Document Component
 const ResumePDFDocument = ({ data, template }: { data: ResumeData; template: ResumeTemplate }) => {
   const styles = createStyles(template);
-  console.log(data,"resume data")
-  
   
   return (
     <Document>
@@ -396,6 +305,28 @@ const ResumePDFDocument = ({ data, template }: { data: ResumeData; template: Res
             ))}
           </View>
         )}
+
+        {data.certifications?.length ? (
+          <View style={styles.section}>
+            <Text style={styles.subheader}>CERTIFICATIONS</Text>
+            {data.certifications.map((certification) => (
+              <View key={certification.id} style={{ marginBottom: 8 }}>
+                <View style={styles.row}>
+                  <Text style={[styles.text, styles.bold]}>{certification.title}</Text>
+                  {(certification.credentialUrl || certification.link) && (
+                    <Link src={certification.credentialUrl || certification.link || ""} style={styles.link}>
+                      View credential
+                    </Link>
+                  )}
+                </View>
+                <Text style={styles.text}>
+                  {certification.issuer}
+                  {(certification.issueDate || certification.date) ? ` · ${formatDate(certification.issueDate || certification.date || "")}` : ""}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
       </Page>
     </Document>
   );

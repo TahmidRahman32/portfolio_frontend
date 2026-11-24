@@ -274,7 +274,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { ArrowUpRight,  ExternalLink, GitBranch } from "lucide-react";
 
@@ -433,39 +433,16 @@ const ProjectCard = ({ project, index, inView }: { project: Project; index: numb
    );
 };
 
-// ── Loading skeleton ───────────────────────────────────────────────────────────
-const Skeleton = () => (
-   <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden animate-pulse">
-      <div className="h-44 bg-white/[0.03]" />
-      <div className="p-5 space-y-3">
-         <div className="h-3 bg-white/[0.05] rounded-full w-2/3" />
-         <div className="h-2 bg-white/[0.03] rounded-full w-full" />
-         <div className="h-2 bg-white/[0.03] rounded-full w-4/5" />
-      </div>
-   </div>
-);
-
 // ── Main ───────────────────────────────────────────────────────────────────────
 const ProjectsSection: React.FC = () => {
    const [activeFilter, setActiveFilter] = useState<Category>("all");
-   const [projects, setProjects] = useState<Project[]>([]);
-   const [loading, setLoading] = useState(true);
-
    const ref = useRef<HTMLElement>(null);
    const inView = useInView(ref, { once: true, margin: "-60px" });
 
-   useEffect(() => {
-      const t = setTimeout(() => {
-         setProjects(mockProjects);
-         setLoading(false);
-      }, 700);
-      return () => clearTimeout(t);
-   }, []);
-
-   const filtered = activeFilter === "all" ? projects : projects.filter((p) => p.category === activeFilter);
+   const filtered = activeFilter === "all" ? mockProjects : mockProjects.filter((p) => p.category === activeFilter);
 
    return (
-      <motion.section ref={ref} id="projects" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="relative w-full overflow-hidden bg-[#0A0A0A] border border-white/[0.06] ">
+      <section ref={ref} id="projects" className="relative w-full overflow-hidden bg-[#0A0A0A] border border-white/[0.06] ">
          {/* Noise */}
          <div
             aria-hidden
@@ -523,24 +500,16 @@ const ProjectsSection: React.FC = () => {
             </div>
 
             {/* ── Grid ── */}
-            <AnimatePresence mode="wait">
-               {loading ? (
-                  <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                     {Array.from({ length: 6 }).map((_, i) => (
-                        <Skeleton key={i} />
-                     ))}
-                  </motion.div>
-               ) : (
-                  <motion.div key={activeFilter} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.4, ease }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                     {filtered.length > 0 ? (
-                        filtered.map((p, i) => <ProjectCard key={p.id} project={p} index={i} inView={inView} />)
-                     ) : (
-                        <div className="col-span-3 py-20 text-center">
-                           <p className="text-sm font-mono text-white/20">No projects in this category yet.</p>
-                        </div>
-                     )}
-                  </motion.div>
-               )}
+            <AnimatePresence mode="wait" initial={false}>
+               <motion.div key={activeFilter} initial={false} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.4, ease }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filtered.length > 0 ? (
+                     filtered.map((p, i) => <ProjectCard key={p.id} project={p} index={i} inView={inView} />)
+                  ) : (
+                     <div className="col-span-3 py-20 text-center">
+                        <p className="text-sm font-mono text-white/20">No projects in this category yet.</p>
+                     </div>
+                  )}
+               </motion.div>
             </AnimatePresence>
 
             {/* ── Footer CTA ── */}
@@ -561,7 +530,7 @@ const ProjectsSection: React.FC = () => {
                </a>
             </motion.div>
          </div>
-      </motion.section>
+      </section>
    );
 };
 

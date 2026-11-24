@@ -382,6 +382,7 @@ import { serverFetch } from "@/lib/server-fetch";
 export interface ResumeData {
    id?: string;
    summary: string;
+   template?: "professional" | "modern" | "minimal" | "creative";
    personalInfo: {
       fullName: string;
       email: string;
@@ -531,6 +532,7 @@ function validateResumeData(data: any): { valid: boolean; errors: string[] } {
 function transformResumeData(data: any): any {
    return {
       summary: data.summary || "",
+      template: data.template,
       personalInfo: {
          fullName: data.personalInfo?.fullName || "",
          email: data.personalInfo?.email || "",
@@ -687,11 +689,19 @@ export async function fetchResume(): Promise<ApiResponse> {
          };
       }
 
-      // console.log("✅ Resume fetched successfully");
+      const resume = Array.isArray(result.data) ? result.data[0] : result.data;
+      if (!resume) {
+         return {
+            success: false,
+            message: "No resume found. Create one to get started.",
+            code: "NOT_FOUND",
+         };
+      }
+
       return {
          success: true,
          message: "Resume fetched successfully",
-         data: result.data,
+         data: resume,
       };
    } catch (error) {
       console.error("❌ Resume fetch error:", error);
@@ -802,10 +812,7 @@ export async function deleteResumeData(): Promise<ApiResponse> {
 export async function getMyResume() {
    try {
       const response = await serverFetch.get("/resume/my", {
-         cache: "force-cache",
-         next: {
-            tags: ["resume-me"],
-         },
+         cache: "no-store",
       });
       const result = await response.json();
       // console.log("My resume:", result);

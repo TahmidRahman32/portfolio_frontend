@@ -4,7 +4,6 @@
 "use client";
 
 import { useState, useActionState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
@@ -12,7 +11,7 @@ import Link from "next/link";
 import { loginSchema } from "@/zod/auth.validation";
 import z from "zod";
 import { submitActionLogin } from "@/components/services/auth/login.service";
-import { clearOAuthParams, getCurrentUser, getOAuthCallbackStatus, initiateOAuthLogin, verifyOAuthAuthentication } from "@/components/services/auth/oauth-handler";
+import { clearOAuthParams, getOAuthCallbackStatus, initiateOAuthLogin } from "@/components/services/auth/oauth-handler";
 
 // ── Shared tokens ──────────────────────────────────────────────────────────────
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -75,94 +74,23 @@ type ActionState = {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 export default function LoginPage() {
-     const router = useRouter();
      const [email, setEmail] = useState("");
      const [password, setPassword] = useState("");
      const [rememberMe, setRememberMe] = useState(false);
      const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(null);
-     const [isVerifyingOAuth, setIsVerifyingOAuth] = useState(false);
 
      const [state, formAction, isPending] = useActionState<ActionState, FormData>(submitActionLogin, { errors: {}, success: false });
 
-     // ✅ FIXED: Handle OAuth callback
      useEffect(() => {
-        const handleOAuthCallback = async () => {
-           const callbackStatus = getOAuthCallbackStatus();
+        const callbackStatus = getOAuthCallbackStatus();
+        if (!callbackStatus?.error) return;
 
-           // Only process if we have an error
-           if (!callbackStatus?.error && callbackStatus?.isCallback !== true) {
-              return;
-           }
-
-           console.log("🔄 OAuth callback detected");
-
-           // Handle OAuth error
-           if (callbackStatus?.error) {
-              console.error("❌ OAuth error:", callbackStatus.error);
-              toast.error("OAuth Login Failed", {
-                 description: callbackStatus.error,
-                 duration: 5000,
-              });
-              clearOAuthParams();
-              setOauthLoading(null);
-              return;
-           }
-
-           // Verify authentication
-           setIsVerifyingOAuth(true);
-           const toastId = toast.loading("Verifying your login...");
-
-           try {
-              // Wait a moment for cookies to be set
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-
-              const isAuthenticated = await verifyOAuthAuthentication();
-
-              if (isAuthenticated) {
-                 console.log("✅ OAuth authentication verified!");
-
-                 const user = await getCurrentUser();
-                 console.log("👤 Current user:", user);
-
-                 toast.success("Login Successful!", {
-                    id: toastId,
-                    description: `Welcome back, ${user?.first_name || user?.name || "user"}!`,
-                    duration: 2000,
-                 });
-
-                 clearOAuthParams();
-                 setOauthLoading(null);
-
-                 // Redirect to dashboard
-                 setTimeout(() => {
-                    router.push("/user/dashboard");
-                 }, 1500);
-              } else {
-                 console.error("❌ Authentication verification failed");
-                 toast.error("Authentication Failed", {
-                    id: toastId,
-                    description: "Cookies may not be set. Try again or use email login.",
-                    duration: 5000,
-                 });
-                 clearOAuthParams();
-                 setOauthLoading(null);
-              }
-           } catch (error) {
-              console.error("❌ OAuth verification error:", error);
-              toast.error("Verification Error", {
-                 id: toastId,
-                 description: "Failed to verify authentication.",
-                 duration: 5000,
-              });
-              clearOAuthParams();
-              setOauthLoading(null);
-           } finally {
-              setIsVerifyingOAuth(false);
-           }
-        };
-
-        handleOAuthCallback();
-     }, [router]);
+        toast.error("OAuth Login Failed", {
+           description: callbackStatus.error,
+           duration: 5000,
+        });
+        clearOAuthParams();
+     }, []);
 
      // Handle email login
      useEffect(() => {
@@ -235,7 +163,7 @@ export default function LoginPage() {
         }
      };
 
-     const isLoading = isPending || !!oauthLoading || isVerifyingOAuth;
+     const isLoading = isPending || !!oauthLoading;
 
    return (
       <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4 py-16">
@@ -339,22 +267,6 @@ export default function LoginPage() {
                         className="mb-5 px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] text-xs font-mono text-red-400/80"
                      >
                         {state.message}
-                     </motion.div>
-                  )}
-               </AnimatePresence>
-
-               {/* Verifying OAuth state indicator */}
-               <AnimatePresence>
-                  {isVerifyingOAuth && (
-                     <motion.div
-                        initial={{ opacity: 0, y: -8, height: 0 }}
-                        animate={{ opacity: 1, y: 0, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="mb-5 px-4 py-3 rounded-xl border border-blue-500/20 bg-blue-500/[0.06] text-xs font-mono text-blue-400/80 flex items-center gap-2"
-                     >
-                        <Loader2 size={14} className="animate-spin" />
-                        Verifying your login...
                      </motion.div>
                   )}
                </AnimatePresence>
