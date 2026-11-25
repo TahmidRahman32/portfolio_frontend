@@ -112,22 +112,14 @@ export default function LoginPage() {
      }, [state.message, state.success]);
 
      // ── Google Login Handler ───────────────────────────────────────────────────────
-     const handleGoogleLogin = async () => {
+     const handleGoogleLogin = () => {
+        if (oauthLoading || isPending) return;
+
         try {
            setOauthLoading("google");
            console.log("🔵 Starting Google OAuth flow...");
 
-           // Initiate OAuth - this will redirect
            initiateOAuthLogin("google", "/user/dashboard");
-
-           // If still here after 3s, something went wrong
-           setTimeout(() => {
-              setOauthLoading(null);
-              toast.error("Google Login", {
-                 description: "Failed to initiate. Please try again.",
-                 duration: 4000,
-              });
-           }, 3000);
         } catch (error) {
            console.error("❌ Google login error:", error);
            setOauthLoading(null);
